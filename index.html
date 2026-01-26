@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>PrayerTimes Barakat — Telegram Mini App (UI Skeleton)</title>
+
+  <style>
+    :root{
+      --neon: #67E5FF;
+      --bg: #0b0f12;
+      --glass1: rgba(255,255,255,.06);
+      --glass2: rgba(255,255,255,.02);
+      --stroke1: rgba(255,255,255,.12);
+      --stroke2: rgba(255,255,255,.06);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.55);
+      --muted2: rgba(255,255,255,.35);
+      --shadow: 0 18px 40px rgba(0,0,0,.45);
+      --radius-lg: 24px;
+      --radius-md: 20px;
+      --radius-sm: 14px;
+
+      --sidePad: clamp(10px, 5vw, 16px);
+      --bannerPad: 0px; /* placeholder под баннер, если понадобится */
+      --safeB: env(safe-area-inset-bottom, 0px);
+      --safeT: env(safe-area-inset-top, 0px);
+    }
+
+    *{ box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* Background */
+    .bg{
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(rgba(0,0,0,.18), rgba(0,0,0,.18)),
+        var(--bg-img, none);
+      background-size: cover;
+      background-position: center;
+      transform: translateZ(0);
+    }
+
+    /* App layout */
+    .app{
+      position: relative;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding-top: calc(8px + var(--safeT));
+      padding-bottom: calc(12px + var(--safeB) + var(--bannerPad));
+    }
+
+    /* Top bar */
+    .topbar{
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items: center;
+      padding: 8px var(--sidePad);
+      gap: 10px;
+      user-select: none;
+    }
+    .topbar .ghost{ width: 44px; height: 44px; }
+    .city{
+      text-align: center;
+      font-weight: 900;
+      font-size: 22px;
+      letter-spacing: .2px;
+      line-height: 1.1;
+      text-shadow: 0 2px 10px rgba(0,0,0,.35);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Round neon icon button */
+    .round-btn{
+      width: 44px; height: 44px;
+      border-radius: 999px;
+      border: 1px solid rgba(103,229,255,.20);
+      background: radial-gradient(ellipse at center, rgba(103,229,255,.16), rgba(0,0,0,0) 60%);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.06) inset,
+        0 0 18px rgba(103,229,255,.12);
+    }
+    .round-btn span{
+      font-size: 18px;
+      font-weight: 900;
+      color: rgba(255,255,255,.92);
+      transform: translateY(-1px);
+    }
+
+    /* Sections spacing */
+    .section{ padding: 0 var(--sidePad); }
+
+    /* Neon card (glass) */
+    .neon-card{
+      position: relative;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, var(--glass1), var(--glass2));
+      border: 1px solid var(--stroke1);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .neon-card::after{
+      content:"";
+      position:absolute; inset: 0;
+      border-radius: inherit;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.05) inset;
+      pointer-events:none;
+    }
+
+    /* Animated “comet-ish” border */
+    .neon-card.enabled::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      border-radius: inherit;
+      background:
+        conic-gradient(from var(--a, 0deg),
+          rgba(103,229,255,.00) 0deg,
+          rgba(103,229,255,.00) 200deg,
+          rgba(103,229,255,.90) 240deg,
+          rgba(103,229,255,.00) 300deg,
+          rgba(103,229,255,.00) 360deg);
+      filter: blur(0.2px);
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      padding: 2px; /* толщина “обводки” */
+      opacity: .9;
+      animation: spin 6.8s linear infinite;
+      pointer-events:none;
+    }
+    @keyframes spin{
+      0%{ --a: 0deg; }
+      100%{ --a: 360deg; }
+    }
+
+    /* Timer card */
+    .timer{
+      height: 90px;
+      padding: 14px 14px;
+      display:flex;
+      align-items:center;
+      gap: 12px;
+    }
+    .timer .icon{
+      width: 44px; height: 44px;
+      border-radius: 999px;
+      display:grid; place-items:center;
+      border: 1px solid rgba(103,229,255,.22);
+      background: radial-gradient(ellipse at center, rgba(103,229,255,.18), rgba(0,0,0,0) 60%);
+      box-shadow: 0 0 18px rgba(103,229,255,.10);
+      font-weight: 900;
+    }
+    .timer .meta{
+      display:flex; flex-direction:column;
+      min-width: 0;
+      flex:1;
+    }
+    .timer .meta .label{
+      font-size: 12px;
+      color: rgba(255,255,255,.72);
+      font-weight: 600;
+    }
+    .timer .meta .time{
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: .8px;
+    }
+    .timer .until{
+      font-size: 13px;
+      color: rgba(255,255,255,.78);
+      white-space: nowrap;
+    }
+
+    /* Chips row */
+    .chips{
+      display:flex;
+      gap: 8px;
+      overflow:auto;
+      padding: 0 var(--sidePad);
+      scrollbar-width: none;
+    }
+    .chips::-webkit-scrollbar{ display:none; }
+
+    .chip{
+      height: 36px;
+      border-radius: 18px;
+      padding: 0 14px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border: 1px solid rgba(255,255,255,.14);
+      background: linear-gradient(135deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      cursor:pointer;
+      white-space: nowrap;
+      user-select:none;
+      font-weight: 700;
+      font-size: 13px;
+      color: rgba(255,255,255,.78);
+      transition: transform .08s ease;
+    }
+    .chip:active{ transform: scale(.98); }
+    .chip.selected{
+      border-color: rgba(103,229,255,.70);
+      background: linear-gradient(135deg, rgba(103,229,255,.14), rgba(0,0,0,0));
+      color: rgba(255,255,255,.98);
+    }
+
+    /* Prayer list */
+    .list{
+      flex: 1;
+      overflow: auto;
+      padding: 0 var(--sidePad);
+      padding-bottom: 18px;
+      scrollbar-width: none;
+    }
+    .list::-webkit-scrollbar{ display:none; }
+
+    .prayer{
+      height: 64px;
+      border-radius: var(--radius-md);
+      display:flex;
+      align-items:center;
+      padding: 0 12px;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .dot{
+      width: 10px; height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.20);
+      flex: 0 0 auto;
+    }
+    .prayer.next .dot{ background: var(--neon); }
+    .p-info{
+      flex:1;
+      min-width: 0;
+      display:flex;
+      flex-direction:column;
+      gap: 2px;
+    }
+    .p-name{
+      font-size: 16px;
+      font-weight: 800;
+      color: rgba(255,255,255,.60);
+    }
+    .prayer.next .p-name{ color: rgba(255,255,255,.95); }
+    .p-ar{
+      font-size: 13px;
+      color: rgba(255,255,255,.30);
+    }
+    .prayer.next .p-ar{ color: rgba(255,255,255,.52); }
+    .p-right{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+    .p-time{
+      font-size: 17px;
+      font-weight: 800;
+      color: rgba(255,255,255,.55);
+      min-width: 54px;
+      text-align: right;
+    }
+    .prayer.next .p-time{ color: rgba(255,255,255,.90); }
+
+    .tiny-btn{
+      width: 28px; height: 28px;
+      border-radius: 999px;
+      display:grid; place-items:center;
+      border: 1px solid rgba(103,229,255,.22);
+      background: radial-gradient(ellipse at center, rgba(103,229,255,.14), rgba(0,0,0,0) 60%);
+      cursor:pointer;
+      user-select:none;
+      font-weight: 900;
+      color: rgba(255,255,255,.90);
+      transition: transform .08s ease, opacity .15s ease;
+    }
+    .tiny-btn:active{ transform: scale(.97); }
+    .tiny-btn.disabled{
+      opacity: .35;
+      pointer-events:none;
+    }
+
+    /* Side menu overlay */
+    .overlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.60);
+      opacity: 0;
+      pointer-events:none;
+      transition: opacity .18s ease;
+    }
+    .overlay.show{
+      opacity: 1;
+      pointer-events:auto;
+    }
+
+    .side{
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: min(420px, 85vw);
+      padding: calc(10px + var(--safeT)) 10px calc(10px + var(--safeB)) 10px;
+      transform: translateX(105%);
+      transition: transform .22s ease;
+      display:flex;
+    }
+    .side.show{ transform: translateX(0); }
+
+    .side-card{
+      width: 100%;
+      border-radius: 22px;
+      background: #0B0F12;
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .side-card::before{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(135deg, rgba(103,229,255,.12), rgba(0,0,0,0));
+      pointer-events:none;
+    }
+    .side-inner{
+      position: relative;
+      height: 100%;
+      display:flex;
+      flex-direction:column;
+      padding: 14px 16px;
+      gap: 10px;
+    }
+
+    .side-header{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+    }
+    .side-title{
+      flex:1;
+      min-width:0;
+    }
+    .side-title .t{
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .side-title .s{
+      font-size: 11px;
+      font-weight: 800;
+      color: rgba(255,255,255,.35);
+      margin-top: 2px;
+    }
+
+    .chipbtn{
+      border-radius: 12px;
+      padding: 8px 12px;
+      border: 1px solid rgba(103,229,255,.35);
+      background: rgba(103,229,255,.12);
+      color: rgba(255,255,255,.95);
+      font-weight: 900;
+      font-size: 12px;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .divider{
+      height: 1px;
+      background: rgba(255,255,255,.08);
+      margin: 2px 0;
+    }
+
+    /* Menu items */
+    .menu{
+      overflow: auto;
+      padding-right: 6px;
+      scrollbar-width: none;
+    }
+    .menu::-webkit-scrollbar{ display:none; }
+
+    .section-title{
+      font-size: 12px;
+      font-weight: 800;
+      color: rgba(255,255,255,.35);
+      padding: 10px 4px 6px 4px;
+    }
+
+    .item{
+      height: 56px;
+      border-radius: 12px;
+      display:flex;
+      align-items:center;
+      padding: 0 14px;
+      gap: 10px;
+      margin: 4px 0;
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      cursor:pointer;
+      user-select:none;
+    }
+    .item .ic{ font-size: 18px; }
+    .item .tx{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+    .item .tx .a{ font-size: 13px; font-weight: 800; color: #fff; }
+    .item .tx .b{ font-size: 11px; font-weight: 800; color: rgba(103,229,255,.70); }
+    .item .arr{ color: rgba(255,255,255,.30); font-weight: 900; }
+
+    .link{
+      height: 50px;
+      border-radius: 12px;
+      display:flex;
+      align-items:center;
+      padding: 0 14px;
+      margin: 4px 0;
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      cursor:pointer;
+      user-select:none;
+      font-weight: 700;
+      color: rgba(255,255,255,.92);
+    }
+
+    .version{
+      text-align:center;
+      font-size: 12px;
+      font-weight: 800;
+      color: rgba(255,255,255,.20);
+      padding: 14px 0 6px 0;
+    }
+
+    /* Bottom sheet (edit time) */
+    .sheet-overlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .18s ease;
+      display:flex;
+      align-items:flex-end;
+      padding: 0 10px calc(10px + var(--safeB)) 10px;
+    }
+    .sheet-overlay.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+    .sheet{
+      width: min(520px, 100%);
+      margin: 0 auto;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: #0B0F12;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      transform: translateY(16px);
+      transition: transform .18s ease;
+      position: relative;
+    }
+    .sheet-overlay.show .sheet{ transform: translateY(0); }
+    .sheet::before{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(135deg, rgba(103,229,255,.12), rgba(0,0,0,0));
+      pointer-events:none;
+    }
+    .sheet-inner{
+      position: relative;
+      padding: 18px 16px 16px 16px;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+    .sheet-head{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+    }
+    .sheet-head .title{
+      flex:1;
+      min-width:0;
+    }
+    .sheet-head .title .t{
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .sheet-head .title .s{
+      font-size: 11px;
+      font-weight: 800;
+      color: rgba(255,255,255,.35);
+      margin-top: 2px;
+    }
+
+    .picker-row{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      justify-content:center;
+      padding: 8px 0;
+    }
+    .picker{
+      width: 44%;
+      min-width: 140px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.07);
+      background: rgba(255,255,255,.03);
+      padding: 10px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .picker label{
+      font-size: 11px;
+      font-weight: 800;
+      color: rgba(255,255,255,.30);
+      text-align:center;
+    }
+    .picker input{
+      width: 100%;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid rgba(103,229,255,.25);
+      background: rgba(103,229,255,.10);
+      color: #fff;
+      font-size: 20px;
+      font-weight: 900;
+      text-align:center;
+      outline: none;
+    }
+    .colon{
+      font-size: 28px;
+      font-weight: 900;
+      color: rgba(255,255,255,.40);
+      transform: translateY(-6px);
+    }
+
+    .sheet-actions{
+      display:flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .btn{
+      height: 50px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.92);
+      font-weight: 900;
+      font-size: 14px;
+      flex:1;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn.primary{
+      flex: 1.2;
+      border-color: rgba(103,229,255,.40);
+      background: rgba(103,229,255,.15);
+      color: #fff;
+    }
+    .btn:active{ transform: scale(.99); }
+
+    /* small helper */
+    .mt8{ margin-top: 8px; }
+    .mt12{ margin-top: 12px; }
+  </style>
+</head>
+
+<body>
+  <div class="bg" id="bg"></div>
+
+  <div class="app" id="app">
+    <div class="topbar">
+      <div class="ghost"></div>
+
+      <!-- City title / placeholder -->
+      <div class="city" id="cityTitle">City</div>
+
+      <div class="round-btn" id="openMenu" title="Menu">
+        <span>≡</span>
+      </div>
+    </div>
+
+    <div class="section mt8">
+      <div class="neon-card enabled">
+        <div class="timer">
+          <div class="icon">⏱</div>
+          <div class="meta">
+            <div class="label">Until next prayer</div>
+            <div class="time" id="remaining">00:00:00</div>
+          </div>
+          <div class="until" id="until">until Fajr</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt12 chips" id="chips"></div>
+
+    <div class="list" id="prayerList"></div>
+  </div>
+
+  <!-- SIDE MENU -->
+  <div class="overlay" id="overlay"></div>
+  <div class="side" id="side">
+    <div class="side-card">
+      <div class="side-inner">
+        <div class="side-header">
+          <div class="side-title">
+            <div class="t" id="menuTitle">Menu</div>
+            <div class="s" id="menuSub">Settings & support</div>
+          </div>
+
+          <button class="chipbtn" id="backBtn" style="display:none;">Back</button>
+          <button class="chipbtn" id="closeBtn">Close</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="menu" id="menuBody"></div>
+
+        <div class="version">v 1.0.0 (UI skeleton)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM SHEET (EDIT TIME) -->
+  <div class="sheet-overlay" id="sheetOverlay">
+    <div class="sheet">
+      <div class="sheet-inner">
+        <div class="sheet-head">
+          <div class="title">
+            <div class="t" id="sheetTitle">Adjust time</div>
+            <div class="s">Change prayer time (UI only)</div>
+          </div>
+          <button class="chipbtn" id="sheetClose">Close</button>
+        </div>
+
+        <div class="picker-row">
+          <div class="picker">
+            <label>Hours</label>
+            <input id="hourInput" inputmode="numeric" maxlength="2" value="06" />
+          </div>
+          <div class="colon">:</div>
+          <div class="picker">
+            <label>Minutes</label>
+            <input id="minInput" inputmode="numeric" maxlength="2" value="35" />
+          </div>
+        </div>
+
+        <div class="sheet-actions">
+          <button class="btn" id="resetBtn">Reset</button>
+          <button class="btn primary" id="saveBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * Telegram Mini App UI skeleton (one file).
+     * Пока без настоящей логики API/гео/хранения — только интерфейс.
+     */
+
+    // ==== 1) BACKGROUND ====
+    // Положи рядом файл bg_main.jpg (или поменяй путь тут)
+    const BACKGROUND_URL = "bg_main.jpg";
+    const bg = document.getElementById("bg");
+    bg.style.setProperty("--bg-img", `url('${BACKGROUND_URL}')`);
+
+    // ==== 2) DATA (mock) ====
+    const METHODS = [
+      { key: "ISNA", title: "ISNA" },
+      { key: "MWL", title: "MWL" },
+      { key: "UMM_AL_QURA", title: "Umm al-Qura" },
+      { key: "EGYPT", title: "Egypt" },
+      { key: "MOONSIGHTING", title: "Moonsighting" },
+    ];
+
+    const PRAYERS = [
+      { key:"Fajr", name:"Fajr", ar:"الفجر", time:"06:35" },
+      { key:"Dhuhr", name:"Dhuhr", ar:"الظهر", time:"12:30" },
+      { key:"Asr", name:"Asr", ar:"العصر", time:"13:47" },
+      { key:"Maghrib", name:"Maghrib", ar:"المغرب", time:"16:00" },
+      { key:"Isha", name:"Isha", ar:"العشاء", time:"17:30" },
+    ];
+
+    let state = {
+      city: "City",
+      method: "UMM_AL_QURA",
+      nextPrayerKey: "Fajr",
+      remaining: "00:12:34",
+      overrides: new Set(), // какие молитвы “переопределены” (UI)
+    };
+
+    // ==== 3) RENDER MAIN UI ====
+    const cityTitle = document.getElementById("cityTitle");
+    const remainingEl = document.getElementById("remaining");
+    const untilEl = document.getElementById("until");
+    const chips = document.getElementById("chips");
+    const list = document.getElementById("prayerList");
+
+    function renderTop(){
+      cityTitle.textContent = state.city;
+      remainingEl.textContent = state.remaining;
+      const next = PRAYERS.find(p => p.key === state.nextPrayerKey) || PRAYERS[0];
+      untilEl.textContent = `until ${next.name}`;
+    }
+
+    function renderChips(){
+      chips.innerHTML = "";
+      METHODS.forEach(m => {
+        const el = document.createElement("div");
+        el.className = "chip" + (m.key === state.method ? " selected" : "");
+        el.textContent = m.title;
+        el.onclick = () => {
+          state.method = m.key;
+          renderChips();
+          // сюда позже можно подвязать пересчёт времени/запрос API
+        };
+        chips.appendChild(el);
+      });
+    }
+
+    function renderPrayerList(){
+      list.innerHTML = "";
+      PRAYERS.forEach(p => {
+        const card = document.createElement("div");
+        const isNext = p.key === state.nextPrayerKey;
+        card.className = "neon-card prayer" + (isNext ? " enabled next" : "");
+        card.innerHTML = `
+          <div class="dot"></div>
+          <div class="p-info">
+            <div class="p-name">${p.name}</div>
+            <div class="p-ar">${p.ar}</div>
+          </div>
+          <div class="p-right">
+            <div class="p-time">${p.time}</div>
+            <div class="tiny-btn" title="Edit">✎</div>
+            <div class="tiny-btn ${state.overrides.has(p.key) ? "" : "disabled"}" title="Reset">↺</div>
+          </div>
+        `;
+
+        const editBtn = card.querySelectorAll(".tiny-btn")[0];
+        const resetBtn = card.querySelectorAll(".tiny-btn")[1];
+
+        editBtn.onclick = () => openSheet(p);
+        resetBtn.onclick = () => {
+          // UI-only reset
+          state.overrides.delete(p.key);
+          renderPrayerList();
+        };
+
+        list.appendChild(card);
+      });
+    }
+
+    // ==== 4) SIDE MENU (pages) ====
+    const overlay = document.getElementById("overlay");
+    const side = document.getElementById("side");
+    const openMenuBtn = document.getElementById("openMenu");
+    const closeBtn = document.getElementById("closeBtn");
+    const backBtn = document.getElementById("backBtn");
+
+    const menuTitle = document.getElementById("menuTitle");
+    const menuSub = document.getElementById("menuSub");
+    const menuBody = document.getElementById("menuBody");
+
+    const MenuPage = {
+      MAIN: "MAIN",
+      LANGUAGE: "LANGUAGE",
+      RINGTONE: "RINGTONE",
+    };
+    let menuPage = MenuPage.MAIN;
+
+    function openMenu(){
+      overlay.classList.add("show");
+      side.classList.add("show");
+      renderMenu();
+    }
+    function closeMenu(){
+      overlay.classList.remove("show");
+      side.classList.remove("show");
+      menuPage = MenuPage.MAIN;
+    }
+    function goBack(){
+      menuPage = MenuPage.MAIN;
+      renderMenu();
+    }
+
+    overlay.onclick = closeMenu;
+    openMenuBtn.onclick = openMenu;
+    closeBtn.onclick = closeMenu;
+    backBtn.onclick = goBack;
+
+    function renderMenu(){
+      backBtn.style.display = (menuPage === MenuPage.MAIN) ? "none" : "inline-block";
+
+      if (menuPage === MenuPage.MAIN){
+        menuTitle.textContent = "Menu";
+        menuSub.textContent = "Settings & support";
+        menuBody.innerHTML = `
+          <div class="section-title">Notifications</div>
+          <div class="item" id="notifyItem">
+            <div class="ic">🔔</div>
+            <div class="tx">
+              <div class="a">Notify</div>
+              <div class="b">10 minutes before</div>
+            </div>
+            <div class="arr">›</div>
+          </div>
+
+          <div class="item" id="soundItem">
+            <div class="ic">🔕</div>
+            <div class="tx">
+              <div class="a">Sound</div>
+              <div class="b">On</div>
+            </div>
+            <div class="arr">›</div>
+          </div>
+
+          <div class="item" id="ringItem">
+            <div class="ic">🎵</div>
+            <div class="tx">
+              <div class="a">Ringtone</div>
+              <div class="b">Default</div>
+            </div>
+            <div class="arr">›</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="section-title">App</div>
+          <div class="item" id="langItem">
+            <div class="ic">🌐</div>
+            <div class="tx">
+              <div class="a">Language</div>
+              <div class="b">System</div>
+            </div>
+            <div class="arr">›</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="section-title">Support</div>
+          <div class="link" id="feedbackLink">✉  Feedback (Telegram)</div>
+          <div class="link" id="rateLink">⭐  Rate app</div>
+          <div class="link" id="shareLink">📤  Share app</div>
+
+          <div class="divider"></div>
+
+          <div class="section-title">Info</div>
+          <div class="link" id="privacyLink">📜  Privacy policy</div>
+          <div class="link" id="siteLink">🌍  Our site</div>
+        `;
+
+        // navigation
+        menuBody.querySelector("#langItem").onclick = () => { menuPage = MenuPage.LANGUAGE; renderMenu(); };
+        menuBody.querySelector("#ringItem").onclick = () => { menuPage = MenuPage.RINGTONE; renderMenu(); };
+
+        // UI-only links (позже подвяжем Telegram.openLink / tg://)
+        menuBody.querySelector("#feedbackLink").onclick = () => alert("Feedback: позже откроем Telegram group/chat");
+        menuBody.querySelector("#rateLink").onclick = () => alert("Rate: позже откроем Play Store");
+        menuBody.querySelector("#shareLink").onclick = () => alert("Share: позже сделаем шаринг ссылки");
+        menuBody.querySelector("#privacyLink").onclick = () => alert("Privacy: позже откроем страницу");
+        menuBody.querySelector("#siteLink").onclick = () => alert("Site: позже откроем страницу");
+
+        // quick toggles UI-only
+        menuBody.querySelector("#notifyItem").onclick = () => alert("Notify: UI-only (позже циклично 0/5/10/15/30)");
+        menuBody.querySelector("#soundItem").onclick = () => alert("Sound: UI-only (позже SOUND/SILENT)");
+
+        return;
+      }
+
+      if (menuPage === MenuPage.LANGUAGE){
+        menuTitle.textContent = "Languages";
+        menuSub.textContent = "Choose app language";
+        menuBody.innerHTML = `
+          <div class="section-title">Languages</div>
+          ${[
+            ["", "System", "System"],
+            ["ru", "Русский", "Русский"],
+            ["en", "English", "English"],
+            ["ar", "العربية", "العربية"],
+            ["id", "Bahasa Indonesia", "Bahasa Indonesia"],
+            ["tr", "Türkçe", "Türkçe"],
+            ["de", "Deutsch", "Deutsch"],
+            ["fr", "Français", "Français"],
+            ["kk", "Қазақша", "Қазақша"],
+            ["tg", "Тоҷикӣ", "Тоҷикӣ"],
+            ["uz", "O‘zbek", "O‘zbek"],
+          ].map(([tag,label,native]) => `
+            <div class="item lang" data-tag="${tag}">
+              <div class="ic">🌐</div>
+              <div class="tx">
+                <div class="a">${label}</div>
+                <div class="b">${native}</div>
+              </div>
+              <div class="arr">›</div>
+            </div>
+          `).join("")}
+        `;
+
+        menuBody.querySelectorAll(".lang").forEach(el => {
+          el.onclick = () => {
+            const tag = el.getAttribute("data-tag") || "";
+            alert("Language pick (UI-only): " + (tag || "system"));
+            // позже: сохранить в storage и перерисовать тексты
+          };
+        });
+
+        return;
+      }
+
+      if (menuPage === MenuPage.RINGTONE){
+        menuTitle.textContent = "Ringtone";
+        menuSub.textContent = "Pick alarm sound";
+        menuBody.innerHTML = `
+          <div class="section-title">Ringtones</div>
+          ${[
+            ["", "Default"],
+            ["content://ringtone/1", "Adhan 1 (mock)"],
+            ["content://ringtone/2", "Adhan 2 (mock)"],
+            ["content://ringtone/3", "Soft tone (mock)"],
+          ].map(([uri, title]) => `
+            <div class="item tone" data-uri="${uri}">
+              <div class="ic">🎵</div>
+              <div class="tx">
+                <div class="a">${title}</div>
+                <div class="b">${uri ? "Selected (UI-only)" : "Default"}</div>
+              </div>
+              <div class="arr">›</div>
+            </div>
+          `).join("")}
+        `;
+
+        menuBody.querySelectorAll(".tone").forEach(el => {
+          el.onclick = () => {
+            const uri = el.getAttribute("data-uri") || "";
+            alert("Ringtone pick (UI-only): " + (uri || "default"));
+            // позже: в Telegram mini app настоящие системные рингтоны недоступны как на Android,
+            // будем делать свою библиотеку звуков/файлов или web-audio.
+          };
+        });
+
+        return;
+      }
+    }
+
+    // ==== 5) BOTTOM SHEET ====
+    const sheetOverlay = document.getElementById("sheetOverlay");
+    const sheetClose = document.getElementById("sheetClose");
+    const sheetTitle = document.getElementById("sheetTitle");
+    const hourInput = document.getElementById("hourInput");
+    const minInput = document.getElementById("minInput");
+    const resetBtn = document.getElementById("resetBtn");
+    const saveBtn = document.getElementById("saveBtn");
+
+    let editingPrayer = null;
+
+    function openSheet(prayer){
+      editingPrayer = prayer;
+      sheetTitle.textContent = prayer.name;
+      const [hh, mm] = (prayer.time || "00:00").split(":");
+      hourInput.value = (hh || "00").padStart(2,"0");
+      minInput.value  = (mm || "00").padStart(2,"0");
+      sheetOverlay.classList.add("show");
+    }
+    function closeSheet(){
+      sheetOverlay.classList.remove("show");
+      editingPrayer = null;
+    }
+
+    sheetOverlay.addEventListener("click", (e) => {
+      if (e.target === sheetOverlay) closeSheet();
+    });
+    sheetClose.onclick = closeSheet;
+
+    function clamp2(v, max){
+      let n = parseInt(String(v).replace(/[^\d]/g,"") || "0", 10);
+      if (Number.isNaN(n)) n = 0;
+      n = Math.max(0, Math.min(max, n));
+      return String(n).padStart(2,"0");
+    }
+
+    hourInput.addEventListener("input", () => hourInput.value = clamp2(hourInput.value, 23));
+    minInput.addEventListener("input", () => minInput.value = clamp2(minInput.value, 59));
+
+    resetBtn.onclick = () => {
+      if (!editingPrayer) return;
+      state.overrides.delete(editingPrayer.key);
+      closeSheet();
+      renderPrayerList();
+    };
+
+    saveBtn.onclick = () => {
+      if (!editingPrayer) return;
+      // UI-only: отметим, что есть override, но реальное время в списке не меняем (можно включить при желании)
+      state.overrides.add(editingPrayer.key);
+      closeSheet();
+      renderPrayerList();
+    };
+
+    // ==== 6) Fake timer tick (UI) ====
+    // Просто для живости интерфейса
+    let fakeSeconds = 12*60 + 34;
+    setInterval(() => {
+      fakeSeconds = Math.max(0, fakeSeconds - 1);
+      const hh = String(Math.floor(fakeSeconds / 3600)).padStart(2,"0");
+      const mm = String(Math.floor((fakeSeconds % 3600) / 60)).padStart(2,"0");
+      const ss = String(fakeSeconds % 60).padStart(2,"0");
+      state.remaining = `${hh}:${mm}:${ss}`;
+      renderTop();
+      if (fakeSeconds === 0) fakeSeconds = 14*60 + 10; // просто чтобы цикл продолжался
+    }, 1000);
+
+    // ==== INIT ====
+    renderTop();
+    renderChips();
+    renderPrayerList();
+
+    // ==== OPTIONAL: Telegram WebApp hooks (позже) ====
+    // if (window.Telegram?.WebApp) {
+    //   Telegram.WebApp.ready();
+    //   Telegram.WebApp.expand();
+    // }
+  </script>
+</body>
+</html>
