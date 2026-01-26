@@ -9,22 +9,27 @@
     :root{
       --neon: #67E5FF;
       --bg: #0b0f12;
+
       --glass1: rgba(255,255,255,.06);
       --glass2: rgba(255,255,255,.02);
       --stroke1: rgba(255,255,255,.12);
       --stroke2: rgba(255,255,255,.06);
+
       --text: rgba(255,255,255,.92);
       --muted: rgba(255,255,255,.55);
       --muted2: rgba(255,255,255,.35);
+
       --shadow: 0 18px 40px rgba(0,0,0,.45);
       --radius-lg: 24px;
       --radius-md: 20px;
       --radius-sm: 14px;
 
       --sidePad: clamp(10px, 5vw, 16px);
-      --bannerPad: 0px; /* placeholder под баннер, если понадобится */
+      --bannerPad: 0px; /* placeholder */
       --safeB: env(safe-area-inset-bottom, 0px);
       --safeT: env(safe-area-inset-top, 0px);
+
+      --cometSpeed: 6.8s;
     }
 
     *{ box-sizing: border-box; }
@@ -112,7 +117,10 @@
       border: 1px solid var(--stroke1);
       box-shadow: var(--shadow);
       overflow: hidden;
+      transform: translateZ(0);
     }
+
+    /* inner soft line */
     .neon-card::after{
       content:"";
       position:absolute; inset: 0;
@@ -121,33 +129,53 @@
       pointer-events:none;
     }
 
-    /* Animated “comet-ish” border */
+    /*
+      COMET BORDER (more compatible than mask-composite)
+      - ::before = glowing border layer
+      - .comet = moving highlight that travels around border (rotate)
+    */
     .neon-card.enabled::before{
       content:"";
       position:absolute;
-      inset:-2px;
+      inset:-1px;
       border-radius: inherit;
-      background:
-        conic-gradient(from var(--a, 0deg),
-          rgba(103,229,255,.00) 0deg,
-          rgba(103,229,255,.00) 200deg,
-          rgba(103,229,255,.90) 240deg,
-          rgba(103,229,255,.00) 300deg,
-          rgba(103,229,255,.00) 360deg);
-      filter: blur(0.2px);
-      -webkit-mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      padding: 2px; /* толщина “обводки” */
-      opacity: .9;
-      animation: spin 6.8s linear infinite;
       pointer-events:none;
+      border: 1px solid rgba(103,229,255,.35);
+      filter: drop-shadow(0 0 10px rgba(103,229,255,.20));
+      opacity: .95;
     }
-    @keyframes spin{
-      0%{ --a: 0deg; }
-      100%{ --a: 360deg; }
+
+    .neon-card.enabled .comet{
+      position:absolute;
+      inset:-3px;
+      border-radius: inherit;
+      pointer-events:none;
+
+      /* gradient “stroke” imitation */
+      border: 3px solid transparent;
+      border-image: conic-gradient(
+        rgba(103,229,255,0) 0deg,
+        rgba(103,229,255,0) 210deg,
+        rgba(103,229,255,.95) 245deg,
+        rgba(103,229,255,0) 300deg,
+        rgba(103,229,255,0) 360deg
+      ) 1;
+
+      filter:
+        drop-shadow(0 0 14px rgba(103,229,255,.30))
+        drop-shadow(0 0 24px rgba(103,229,255,.18));
+
+      animation: cometSpin var(--cometSpeed) linear infinite;
+      opacity: .9;
+    }
+
+    @keyframes cometSpin{
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .neon-card.enabled .comet{ animation: none; }
     }
 
     /* Timer card */
@@ -157,6 +185,8 @@
       display:flex;
       align-items:center;
       gap: 12px;
+      position: relative;
+      z-index: 1;
     }
     .timer .icon{
       width: 44px; height: 44px;
@@ -240,6 +270,8 @@
       padding: 0 12px;
       gap: 12px;
       margin-top: 10px;
+      position: relative;
+      z-index: 1;
     }
     .dot{
       width: 10px; height: 10px;
@@ -586,7 +618,6 @@
     <div class="topbar">
       <div class="ghost"></div>
 
-      <!-- City title / placeholder -->
       <div class="city" id="cityTitle">City</div>
 
       <div class="round-btn" id="openMenu" title="Menu">
@@ -596,6 +627,7 @@
 
     <div class="section mt8">
       <div class="neon-card enabled">
+        <div class="comet" aria-hidden="true"></div>
         <div class="timer">
           <div class="icon">⏱</div>
           <div class="meta">
@@ -671,14 +703,32 @@
   <script>
     /**
      * Telegram Mini App UI skeleton (one file).
-     * Пока без настоящей логики API/гео/хранения — только интерфейс.
      */
 
     // ==== 1) BACKGROUND ====
-    // Положи рядом файл bg_main.jpg (или поменяй путь тут)
-    const BACKGROUND_URL = "bg_main.jpg";
+    // В репо у тебя bg_main.png. Делаем png по умолчанию + fallback на jpg.
+    const BG_CANDIDATES = ["bg_main.png", "bg_main.jpg"];
     const bg = document.getElementById("bg");
-    bg.style.setProperty("--bg-img", `url('${BACKGROUND_URL}')`);
+
+    function setBackground(url){
+      bg.style.setProperty("--bg-img", `url('${url}')`);
+    }
+
+    // Try load first existing bg
+    (function initBg(){
+      const tryNext = (i) => {
+        if (i >= BG_CANDIDATES.length) {
+          // no bg found -> leave gradient only
+          return;
+        }
+        const url = BG_CANDIDATES[i];
+        const img = new Image();
+        img.onload = () => setBackground(url);
+        img.onerror = () => tryNext(i + 1);
+        img.src = url + "?v=" + Date.now(); // anti-cache while testing
+      };
+      tryNext(0);
+    })();
 
     // ==== 2) DATA (mock) ====
     const METHODS = [
@@ -702,7 +752,7 @@
       method: "UMM_AL_QURA",
       nextPrayerKey: "Fajr",
       remaining: "00:12:34",
-      overrides: new Set(), // какие молитвы “переопределены” (UI)
+      overrides: new Set(),
     };
 
     // ==== 3) RENDER MAIN UI ====
@@ -728,7 +778,6 @@
         el.onclick = () => {
           state.method = m.key;
           renderChips();
-          // сюда позже можно подвязать пересчёт времени/запрос API
         };
         chips.appendChild(el);
       });
@@ -739,8 +788,12 @@
       PRAYERS.forEach(p => {
         const card = document.createElement("div");
         const isNext = p.key === state.nextPrayerKey;
+
         card.className = "neon-card prayer" + (isNext ? " enabled next" : "");
+
+        // comet element only for enabled cards
         card.innerHTML = `
+          ${isNext ? `<div class="comet" aria-hidden="true"></div>` : ``}
           <div class="dot"></div>
           <div class="p-info">
             <div class="p-name">${p.name}</div>
@@ -758,7 +811,6 @@
 
         editBtn.onclick = () => openSheet(p);
         resetBtn.onclick = () => {
-          // UI-only reset
           state.overrides.delete(p.key);
           renderPrayerList();
         };
@@ -767,7 +819,7 @@
       });
     }
 
-    // ==== 4) SIDE MENU (pages) ====
+    // ==== 4) SIDE MENU ====
     const overlay = document.getElementById("overlay");
     const side = document.getElementById("side");
     const openMenuBtn = document.getElementById("openMenu");
@@ -778,11 +830,7 @@
     const menuSub = document.getElementById("menuSub");
     const menuBody = document.getElementById("menuBody");
 
-    const MenuPage = {
-      MAIN: "MAIN",
-      LANGUAGE: "LANGUAGE",
-      RINGTONE: "RINGTONE",
-    };
+    const MenuPage = { MAIN:"MAIN", LANGUAGE:"LANGUAGE", RINGTONE:"RINGTONE" };
     let menuPage = MenuPage.MAIN;
 
     function openMenu(){
@@ -866,21 +914,17 @@
           <div class="link" id="siteLink">🌍  Our site</div>
         `;
 
-        // navigation
         menuBody.querySelector("#langItem").onclick = () => { menuPage = MenuPage.LANGUAGE; renderMenu(); };
         menuBody.querySelector("#ringItem").onclick = () => { menuPage = MenuPage.RINGTONE; renderMenu(); };
 
-        // UI-only links (позже подвяжем Telegram.openLink / tg://)
         menuBody.querySelector("#feedbackLink").onclick = () => alert("Feedback: позже откроем Telegram group/chat");
         menuBody.querySelector("#rateLink").onclick = () => alert("Rate: позже откроем Play Store");
         menuBody.querySelector("#shareLink").onclick = () => alert("Share: позже сделаем шаринг ссылки");
         menuBody.querySelector("#privacyLink").onclick = () => alert("Privacy: позже откроем страницу");
         menuBody.querySelector("#siteLink").onclick = () => alert("Site: позже откроем страницу");
 
-        // quick toggles UI-only
         menuBody.querySelector("#notifyItem").onclick = () => alert("Notify: UI-only (позже циклично 0/5/10/15/30)");
         menuBody.querySelector("#soundItem").onclick = () => alert("Sound: UI-only (позже SOUND/SILENT)");
-
         return;
       }
 
@@ -917,10 +961,8 @@
           el.onclick = () => {
             const tag = el.getAttribute("data-tag") || "";
             alert("Language pick (UI-only): " + (tag || "system"));
-            // позже: сохранить в storage и перерисовать тексты
           };
         });
-
         return;
       }
 
@@ -950,11 +992,8 @@
           el.onclick = () => {
             const uri = el.getAttribute("data-uri") || "";
             alert("Ringtone pick (UI-only): " + (uri || "default"));
-            // позже: в Telegram mini app настоящие системные рингтоны недоступны как на Android,
-            // будем делать свою библиотеку звуков/файлов или web-audio.
           };
         });
-
         return;
       }
     }
@@ -994,7 +1033,6 @@
       n = Math.max(0, Math.min(max, n));
       return String(n).padStart(2,"0");
     }
-
     hourInput.addEventListener("input", () => hourInput.value = clamp2(hourInput.value, 23));
     minInput.addEventListener("input", () => minInput.value = clamp2(minInput.value, 59));
 
@@ -1007,14 +1045,12 @@
 
     saveBtn.onclick = () => {
       if (!editingPrayer) return;
-      // UI-only: отметим, что есть override, но реальное время в списке не меняем (можно включить при желании)
       state.overrides.add(editingPrayer.key);
       closeSheet();
       renderPrayerList();
     };
 
-    // ==== 6) Fake timer tick (UI) ====
-    // Просто для живости интерфейса
+    // ==== 6) Fake timer tick ====
     let fakeSeconds = 12*60 + 34;
     setInterval(() => {
       fakeSeconds = Math.max(0, fakeSeconds - 1);
@@ -1023,19 +1059,13 @@
       const ss = String(fakeSeconds % 60).padStart(2,"0");
       state.remaining = `${hh}:${mm}:${ss}`;
       renderTop();
-      if (fakeSeconds === 0) fakeSeconds = 14*60 + 10; // просто чтобы цикл продолжался
+      if (fakeSeconds === 0) fakeSeconds = 14*60 + 10;
     }, 1000);
 
     // ==== INIT ====
     renderTop();
     renderChips();
     renderPrayerList();
-
-    // ==== OPTIONAL: Telegram WebApp hooks (позже) ====
-    // if (window.Telegram?.WebApp) {
-    //   Telegram.WebApp.ready();
-    //   Telegram.WebApp.expand();
-    // }
   </script>
 </body>
 </html>
