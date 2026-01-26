@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>PrayerTimes Barakat — Telegram Mini App (UI Skeleton)</title>
+  <title>PrayerTimes Barakat — Mini App Skeleton</title>
 
   <style>
     :root{
-      --neon: #67E5FF;
-      --bg: #0b0f12;
+      --neon:#67E5FF;
+      --bg:#0b0f12;
 
       --glass1: rgba(255,255,255,.06);
       --glass2: rgba(255,255,255,.02);
@@ -17,220 +17,106 @@
 
       --text: rgba(255,255,255,.92);
       --muted: rgba(255,255,255,.55);
-      --muted2: rgba(255,255,255,.35);
 
       --shadow: 0 18px 40px rgba(0,0,0,.45);
+
       --radius-lg: 24px;
       --radius-md: 20px;
       --radius-sm: 14px;
 
       --sidePad: clamp(10px, 5vw, 16px);
-      --bannerPad: 0px; /* placeholder */
       --safeB: env(safe-area-inset-bottom, 0px);
       --safeT: env(safe-area-inset-top, 0px);
 
-      --cometSpeed: 6.8s;
+      --cometSpeed: 8s;
     }
 
-    *{ box-sizing: border-box; }
-    html, body { height: 100%; }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
     body{
-      margin: 0;
+      margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       background: var(--bg);
       color: var(--text);
-      overflow: hidden;
+      overflow:hidden;
     }
 
-    /* Background */
+    /* ===== Background (your bg_main.png) ===== */
     .bg{
-      position: fixed;
-      inset: 0;
+      position:fixed;
+      inset:0;
       background:
         linear-gradient(rgba(0,0,0,.18), rgba(0,0,0,.18)),
         var(--bg-img, none);
-      background-size: cover;
-      background-position: center;
+      background-size:cover;
+      background-position:center;
       transform: translateZ(0);
     }
 
-    /* App layout */
+    /* ===== App Layout ===== */
     .app{
-      position: relative;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
+      position:relative;
+      height:100%;
+      display:flex;
+      flex-direction:column;
       padding-top: calc(8px + var(--safeT));
-      padding-bottom: calc(12px + var(--safeB) + var(--bannerPad));
+      padding-bottom: calc(12px + var(--safeB));
     }
 
-    /* Top bar */
+    /* ===== Top bar ===== */
     .topbar{
-      display: grid;
+      display:grid;
       grid-template-columns: 44px 1fr 44px;
-      align-items: center;
+      align-items:center;
       padding: 8px var(--sidePad);
-      gap: 10px;
-      user-select: none;
+      gap:10px;
+      user-select:none;
     }
-    .topbar .ghost{ width: 44px; height: 44px; }
+    .topbar .ghost{ width:44px; height:44px; }
     .city{
-      text-align: center;
-      font-weight: 900;
-      font-size: 22px;
-      letter-spacing: .2px;
-      line-height: 1.1;
+      text-align:center;
+      font-weight:900;
+      font-size:22px;
+      letter-spacing:.2px;
+      line-height:1.1;
       text-shadow: 0 2px 10px rgba(0,0,0,.35);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
-    /* Round neon icon button */
     .round-btn{
-      width: 44px; height: 44px;
-      border-radius: 999px;
-      border: 1px solid rgba(103,229,255,.20);
+      width:44px; height:44px;
+      border-radius:999px;
+      border:1px solid rgba(103,229,255,.20);
       background: radial-gradient(ellipse at center, rgba(103,229,255,.16), rgba(0,0,0,0) 60%);
-      display: grid;
-      place-items: center;
-      cursor: pointer;
+      display:grid;
+      place-items:center;
+      cursor:pointer;
       box-shadow:
         0 0 0 1px rgba(255,255,255,.06) inset,
         0 0 18px rgba(103,229,255,.12);
     }
     .round-btn span{
-      font-size: 18px;
-      font-weight: 900;
+      font-size:18px;
+      font-weight:900;
       color: rgba(255,255,255,.92);
       transform: translateY(-1px);
     }
 
-    /* Sections spacing */
-    .section{ padding: 0 var(--sidePad); }
-
-    /* Neon card (glass) */
-    .neon-card{
-      position: relative;
-      border-radius: var(--radius-lg);
-      background: linear-gradient(135deg, var(--glass1), var(--glass2));
-      border: 1px solid var(--stroke1);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      transform: translateZ(0);
-    }
-
-    /* inner soft line */
-    .neon-card::after{
-      content:"";
-      position:absolute; inset: 0;
-      border-radius: inherit;
-      box-shadow: 0 0 0 1px rgba(255,255,255,.05) inset;
-      pointer-events:none;
-    }
-
-    /*
-      COMET BORDER (more compatible than mask-composite)
-      - ::before = glowing border layer
-      - .comet = moving highlight that travels around border (rotate)
-    */
-    .neon-card.enabled::before{
-      content:"";
-      position:absolute;
-      inset:-1px;
-      border-radius: inherit;
-      pointer-events:none;
-      border: 1px solid rgba(103,229,255,.35);
-      filter: drop-shadow(0 0 10px rgba(103,229,255,.20));
-      opacity: .95;
-    }
-
-    .neon-card.enabled .comet{
-      position:absolute;
-      inset:-3px;
-      border-radius: inherit;
-      pointer-events:none;
-
-      /* gradient “stroke” imitation */
-      border: 3px solid transparent;
-      border-image: conic-gradient(
-        rgba(103,229,255,0) 0deg,
-        rgba(103,229,255,0) 210deg,
-        rgba(103,229,255,.95) 245deg,
-        rgba(103,229,255,0) 300deg,
-        rgba(103,229,255,0) 360deg
-      ) 1;
-
-      filter:
-        drop-shadow(0 0 14px rgba(103,229,255,.30))
-        drop-shadow(0 0 24px rgba(103,229,255,.18));
-
-      animation: cometSpin var(--cometSpeed) linear infinite;
-      opacity: .9;
-    }
-
-    @keyframes cometSpin{
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
-    }
-
-    @media (prefers-reduced-motion: reduce){
-      .neon-card.enabled .comet{ animation: none; }
-    }
-
-    /* Timer card */
-    .timer{
-      height: 90px;
-      padding: 14px 14px;
-      display:flex;
-      align-items:center;
-      gap: 12px;
-      position: relative;
-      z-index: 1;
-    }
-    .timer .icon{
-      width: 44px; height: 44px;
-      border-radius: 999px;
-      display:grid; place-items:center;
-      border: 1px solid rgba(103,229,255,.22);
-      background: radial-gradient(ellipse at center, rgba(103,229,255,.18), rgba(0,0,0,0) 60%);
-      box-shadow: 0 0 18px rgba(103,229,255,.10);
-      font-weight: 900;
-    }
-    .timer .meta{
-      display:flex; flex-direction:column;
-      min-width: 0;
-      flex:1;
-    }
-    .timer .meta .label{
-      font-size: 12px;
-      color: rgba(255,255,255,.72);
-      font-weight: 600;
-    }
-    .timer .meta .time{
-      font-size: 26px;
-      font-weight: 900;
-      letter-spacing: .8px;
-    }
-    .timer .until{
-      font-size: 13px;
-      color: rgba(255,255,255,.78);
-      white-space: nowrap;
-    }
-
-    /* Chips row */
+    /* ===== Chips ===== */
     .chips{
       display:flex;
-      gap: 8px;
+      gap:8px;
       overflow:auto;
       padding: 0 var(--sidePad);
-      scrollbar-width: none;
+      scrollbar-width:none;
     }
     .chips::-webkit-scrollbar{ display:none; }
 
     .chip{
-      height: 36px;
-      border-radius: 18px;
+      height:36px;
+      border-radius:18px;
       padding: 0 14px;
       display:inline-flex;
       align-items:center;
@@ -238,10 +124,10 @@
       border: 1px solid rgba(255,255,255,.14);
       background: linear-gradient(135deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
       cursor:pointer;
-      white-space: nowrap;
+      white-space:nowrap;
       user-select:none;
-      font-weight: 700;
-      font-size: 13px;
+      font-weight:700;
+      font-size:13px;
       color: rgba(255,255,255,.78);
       transition: transform .08s ease;
     }
@@ -252,102 +138,181 @@
       color: rgba(255,255,255,.98);
     }
 
-    /* Prayer list */
+    /* ===== List ===== */
     .list{
-      flex: 1;
-      overflow: auto;
+      flex:1;
+      overflow:auto;
       padding: 0 var(--sidePad);
       padding-bottom: 18px;
-      scrollbar-width: none;
+      scrollbar-width:none;
     }
     .list::-webkit-scrollbar{ display:none; }
 
+    /* ===== Neon Card (base like Compose) ===== */
+    .neon-card{
+      position:relative;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, var(--glass1), var(--glass2));
+      border: 1px solid var(--stroke1);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      transform: translateZ(0);
+    }
+    .neon-card::after{
+      content:"";
+      position:absolute; inset:0;
+      border-radius: inherit;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.05) inset;
+      pointer-events:none;
+    }
+
+    /* ===== Inner neon tint when enabled (like neonInnerTintRounded) ===== */
+    .neon-card.enabled .tint{
+      position:absolute; inset:0;
+      pointer-events:none;
+      background: linear-gradient(135deg, rgba(103,229,255,.14), rgba(0,0,0,0));
+    }
+
+    /* ===================================================================
+       COMET BORDER (matches your Compose idea: moving "head" + fading tail)
+       We draw 2 layers:
+       1) a stable faint neon ring
+       2) a conic-gradient "head" rotated infinitely (like phase runner)
+       This is the closest stable web analogue to your Canvas path animation.
+       =================================================================== */
+
+    .neon-card.enabled .ring{
+      position:absolute;
+      inset: -1px;
+      border-radius: inherit;
+      pointer-events:none;
+      border: 1px solid rgba(103,229,255,.35);
+      filter: drop-shadow(0 0 10px rgba(103,229,255,.20));
+      opacity: .95;
+    }
+
+    .neon-card.enabled .comet{
+      position:absolute;
+      inset: -3px;
+      border-radius: inherit;
+      pointer-events:none;
+
+      /* "Stroke" */
+      border: 3px solid transparent;
+
+      /* Conic gradient creates head+tail segment, then we rotate it */
+      border-image: conic-gradient(
+        rgba(103,229,255,0.00) 0deg,
+        rgba(103,229,255,0.00) 210deg,
+        rgba(103,229,255,0.85) 240deg,
+        rgba(103,229,255,0.35) 252deg,
+        rgba(103,229,255,0.12) 264deg,
+        rgba(103,229,255,0.00) 300deg,
+        rgba(103,229,255,0.00) 360deg
+      ) 1;
+
+      filter:
+        drop-shadow(0 0 14px rgba(103,229,255,.30))
+        drop-shadow(0 0 24px rgba(103,229,255,.18));
+
+      animation: cometSpin var(--cometSpeed) linear infinite;
+      opacity: .95;
+    }
+
+    @keyframes cometSpin{
+      from{ transform: rotate(0deg); }
+      to{ transform: rotate(360deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .neon-card.enabled .comet{ animation:none; }
+    }
+
+    /* ===== Timer card content ===== */
+    .timer{
+      height:90px;
+      padding: 14px 14px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      position:relative;
+      z-index:1;
+    }
+    .timer .icon{
+      width:44px; height:44px;
+      border-radius:999px;
+      display:grid; place-items:center;
+      border:1px solid rgba(103,229,255,.22);
+      background: radial-gradient(ellipse at center, rgba(103,229,255,.18), rgba(0,0,0,0) 60%);
+      box-shadow: 0 0 18px rgba(103,229,255,.10);
+      font-weight:900;
+    }
+    .timer .meta{ flex:1; min-width:0; display:flex; flex-direction:column; }
+    .timer .meta .label{ font-size:12px; color: rgba(255,255,255,.72); font-weight:600; }
+    .timer .meta .time{ font-size:26px; font-weight:900; letter-spacing:.8px; }
+    .timer .until{ font-size:13px; color: rgba(255,255,255,.78); white-space:nowrap; }
+
+    /* ===== Prayer row ===== */
     .prayer{
-      height: 64px;
+      height:64px;
       border-radius: var(--radius-md);
       display:flex;
       align-items:center;
       padding: 0 12px;
-      gap: 12px;
-      margin-top: 10px;
-      position: relative;
-      z-index: 1;
+      gap:12px;
+      margin-top:10px;
+      position:relative;
+      z-index:1;
     }
-    .dot{
-      width: 10px; height: 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.20);
-      flex: 0 0 auto;
-    }
+
+    .dot{ width:10px; height:10px; border-radius:999px; background: rgba(255,255,255,.20); }
     .prayer.next .dot{ background: var(--neon); }
-    .p-info{
-      flex:1;
-      min-width: 0;
-      display:flex;
-      flex-direction:column;
-      gap: 2px;
-    }
-    .p-name{
-      font-size: 16px;
-      font-weight: 800;
-      color: rgba(255,255,255,.60);
-    }
+
+    .p-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+    .p-name{ font-size:16px; font-weight:800; color: rgba(255,255,255,.60); }
     .prayer.next .p-name{ color: rgba(255,255,255,.95); }
-    .p-ar{
-      font-size: 13px;
-      color: rgba(255,255,255,.30);
-    }
+
+    .p-ar{ font-size:13px; color: rgba(255,255,255,.30); }
     .prayer.next .p-ar{ color: rgba(255,255,255,.52); }
-    .p-right{
-      display:flex;
-      align-items:center;
-      gap: 8px;
-      flex: 0 0 auto;
-    }
-    .p-time{
-      font-size: 17px;
-      font-weight: 800;
-      color: rgba(255,255,255,.55);
-      min-width: 54px;
-      text-align: right;
-    }
+
+    .p-right{ display:flex; align-items:center; gap:8px; }
+    .p-time{ font-size:17px; font-weight:800; color: rgba(255,255,255,.55); min-width:54px; text-align:right; }
     .prayer.next .p-time{ color: rgba(255,255,255,.90); }
 
     .tiny-btn{
-      width: 28px; height: 28px;
-      border-radius: 999px;
+      width:28px; height:28px;
+      border-radius:999px;
       display:grid; place-items:center;
-      border: 1px solid rgba(103,229,255,.22);
+      border:1px solid rgba(103,229,255,.22);
       background: radial-gradient(ellipse at center, rgba(103,229,255,.14), rgba(0,0,0,0) 60%);
       cursor:pointer;
       user-select:none;
-      font-weight: 900;
+      font-weight:900;
       color: rgba(255,255,255,.90);
       transition: transform .08s ease, opacity .15s ease;
     }
     .tiny-btn:active{ transform: scale(.97); }
-    .tiny-btn.disabled{
-      opacity: .35;
-      pointer-events:none;
-    }
+    .tiny-btn.disabled{ opacity:.35; pointer-events:none; }
 
-    /* Side menu overlay */
+    /* ===================================================================
+       MENU + TIME SHEET: YOU ASKED "NO TRANSPARENCY" => solid panels
+       =================================================================== */
+
+    /* Fullscreen overlay remains semi-dark (like scrim) */
     .overlay{
-      position: fixed;
-      inset: 0;
+      position:fixed;
+      inset:0;
       background: rgba(0,0,0,.60);
-      opacity: 0;
+      opacity:0;
       pointer-events:none;
       transition: opacity .18s ease;
     }
-    .overlay.show{
-      opacity: 1;
-      pointer-events:auto;
-    }
+    .overlay.show{ opacity:1; pointer-events:auto; }
 
+    /* Side drawer */
     .side{
-      position: fixed;
-      top: 0; right: 0; bottom: 0;
+      position:fixed;
+      top:0; right:0; bottom:0;
       width: min(420px, 85vw);
       padding: calc(10px + var(--safeT)) 10px calc(10px + var(--safeB)) 10px;
       transform: translateX(105%);
@@ -356,129 +321,98 @@
     }
     .side.show{ transform: translateX(0); }
 
+    /* SOLID (no transparency) */
     .side-card{
-      width: 100%;
-      border-radius: 22px;
-      background: #0B0F12;
+      width:100%;
+      border-radius:22px;
+      background: #0B0F12;                 /* solid */
       border: 1px solid rgba(255,255,255,.10);
       box-shadow: var(--shadow);
-      overflow: hidden;
-      position: relative;
+      overflow:hidden;
+      position:relative;
     }
-    .side-card::before{
-      content:"";
+    .side-card .tint{
       position:absolute; inset:0;
       background: linear-gradient(135deg, rgba(103,229,255,.12), rgba(0,0,0,0));
       pointer-events:none;
     }
     .side-inner{
-      position: relative;
-      height: 100%;
+      position:relative;
+      height:100%;
       display:flex;
       flex-direction:column;
       padding: 14px 16px;
-      gap: 10px;
+      gap:10px;
     }
 
-    .side-header{
-      display:flex;
-      align-items:center;
-      gap: 8px;
-    }
-    .side-title{
-      flex:1;
-      min-width:0;
-    }
-    .side-title .t{
-      font-size: 18px;
-      font-weight: 900;
-    }
-    .side-title .s{
-      font-size: 11px;
-      font-weight: 800;
-      color: rgba(255,255,255,.35);
-      margin-top: 2px;
-    }
+    .side-header{ display:flex; align-items:center; gap:8px; }
+    .side-title{ flex:1; min-width:0; }
+    .side-title .t{ font-size:18px; font-weight:900; }
+    .side-title .s{ font-size:11px; font-weight:800; color: rgba(255,255,255,.35); margin-top:2px; }
 
     .chipbtn{
-      border-radius: 12px;
+      border-radius:12px;
       padding: 8px 12px;
       border: 1px solid rgba(103,229,255,.35);
       background: rgba(103,229,255,.12);
       color: rgba(255,255,255,.95);
-      font-weight: 900;
-      font-size: 12px;
+      font-weight:900;
+      font-size:12px;
       cursor:pointer;
       user-select:none;
     }
+    .divider{ height:1px; background: rgba(255,255,255,.08); margin: 2px 0; }
 
-    .divider{
-      height: 1px;
-      background: rgba(255,255,255,.08);
-      margin: 2px 0;
-    }
-
-    /* Menu items */
-    .menu{
-      overflow: auto;
-      padding-right: 6px;
-      scrollbar-width: none;
-    }
+    .menu{ overflow:auto; padding-right:6px; scrollbar-width:none; }
     .menu::-webkit-scrollbar{ display:none; }
-
-    .section-title{
-      font-size: 12px;
-      font-weight: 800;
-      color: rgba(255,255,255,.35);
-      padding: 10px 4px 6px 4px;
-    }
+    .section-title{ font-size:12px; font-weight:800; color: rgba(255,255,255,.35); padding: 10px 4px 6px 4px; }
 
     .item{
-      height: 56px;
-      border-radius: 12px;
+      height:56px;
+      border-radius:12px;
       display:flex;
       align-items:center;
       padding: 0 14px;
-      gap: 10px;
-      margin: 4px 0;
-      border: 1px solid rgba(255,255,255,.12);
+      gap:10px;
+      margin:4px 0;
+      border:1px solid rgba(255,255,255,.12);
       background: linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
       cursor:pointer;
       user-select:none;
     }
-    .item .ic{ font-size: 18px; }
+    .item .ic{ font-size:18px; }
     .item .tx{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
-    .item .tx .a{ font-size: 13px; font-weight: 800; color: #fff; }
-    .item .tx .b{ font-size: 11px; font-weight: 800; color: rgba(103,229,255,.70); }
-    .item .arr{ color: rgba(255,255,255,.30); font-weight: 900; }
+    .item .tx .a{ font-size:13px; font-weight:800; color:#fff; }
+    .item .tx .b{ font-size:11px; font-weight:800; color: rgba(103,229,255,.70); }
+    .item .arr{ color: rgba(255,255,255,.30); font-weight:900; }
 
     .link{
-      height: 50px;
-      border-radius: 12px;
+      height:50px;
+      border-radius:12px;
       display:flex;
       align-items:center;
       padding: 0 14px;
-      margin: 4px 0;
-      border: 1px solid rgba(255,255,255,.12);
+      margin:4px 0;
+      border:1px solid rgba(255,255,255,.12);
       background: linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
       cursor:pointer;
       user-select:none;
-      font-weight: 700;
+      font-weight:700;
       color: rgba(255,255,255,.92);
     }
 
     .version{
       text-align:center;
-      font-size: 12px;
-      font-weight: 800;
+      font-size:12px;
+      font-weight:800;
       color: rgba(255,255,255,.20);
       padding: 14px 0 6px 0;
     }
 
-    /* Bottom sheet (edit time) */
+    /* Bottom sheet (SOLID) */
     .sheet-overlay{
-      position: fixed;
-      inset: 0;
+      position:fixed;
+      inset:0;
       background: rgba(0,0,0,.55);
       opacity:0;
       pointer-events:none;
@@ -487,127 +421,106 @@
       align-items:flex-end;
       padding: 0 10px calc(10px + var(--safeB)) 10px;
     }
-    .sheet-overlay.show{
-      opacity:1;
-      pointer-events:auto;
-    }
+    .sheet-overlay.show{ opacity:1; pointer-events:auto; }
+
     .sheet{
       width: min(520px, 100%);
       margin: 0 auto;
       border-radius: 22px;
       border: 1px solid rgba(255,255,255,.10);
-      background: #0B0F12;
+      background: #0B0F12;                /* solid */
       box-shadow: var(--shadow);
       overflow:hidden;
       transform: translateY(16px);
       transition: transform .18s ease;
-      position: relative;
+      position:relative;
     }
     .sheet-overlay.show .sheet{ transform: translateY(0); }
-    .sheet::before{
-      content:"";
+    .sheet .tint{
       position:absolute; inset:0;
       background: linear-gradient(135deg, rgba(103,229,255,.12), rgba(0,0,0,0));
       pointer-events:none;
     }
     .sheet-inner{
-      position: relative;
+      position:relative;
       padding: 18px 16px 16px 16px;
       display:flex;
       flex-direction:column;
-      gap: 12px;
+      gap:12px;
     }
-    .sheet-head{
-      display:flex;
-      align-items:center;
-      gap: 10px;
-    }
-    .sheet-head .title{
-      flex:1;
-      min-width:0;
-    }
-    .sheet-head .title .t{
-      font-size: 18px;
-      font-weight: 900;
-    }
-    .sheet-head .title .s{
-      font-size: 11px;
-      font-weight: 800;
-      color: rgba(255,255,255,.35);
-      margin-top: 2px;
-    }
+
+    .sheet-head{ display:flex; align-items:center; gap:10px; }
+    .sheet-head .title{ flex:1; min-width:0; }
+    .sheet-head .title .t{ font-size:18px; font-weight:900; }
+    .sheet-head .title .s{ font-size:11px; font-weight:800; color: rgba(255,255,255,.35); margin-top:2px; }
 
     .picker-row{
       display:flex;
       align-items:center;
-      gap: 12px;
+      gap:12px;
       justify-content:center;
       padding: 8px 0;
     }
     .picker{
-      width: 44%;
-      min-width: 140px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.07);
+      width:44%;
+      min-width:140px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.07);
       background: rgba(255,255,255,.03);
-      padding: 10px;
+      padding:10px;
       display:flex;
       flex-direction:column;
-      gap: 10px;
+      gap:10px;
     }
     .picker label{
-      font-size: 11px;
-      font-weight: 800;
+      font-size:11px;
+      font-weight:800;
       color: rgba(255,255,255,.30);
       text-align:center;
     }
     .picker input{
-      width: 100%;
-      height: 44px;
-      border-radius: 12px;
-      border: 1px solid rgba(103,229,255,.25);
+      width:100%;
+      height:44px;
+      border-radius:12px;
+      border:1px solid rgba(103,229,255,.25);
       background: rgba(103,229,255,.10);
-      color: #fff;
-      font-size: 20px;
-      font-weight: 900;
+      color:#fff;
+      font-size:20px;
+      font-weight:900;
       text-align:center;
-      outline: none;
+      outline:none;
     }
     .colon{
-      font-size: 28px;
-      font-weight: 900;
+      font-size:28px;
+      font-weight:900;
       color: rgba(255,255,255,.40);
       transform: translateY(-6px);
     }
 
-    .sheet-actions{
-      display:flex;
-      gap: 10px;
-      margin-top: 6px;
-    }
+    .sheet-actions{ display:flex; gap:10px; margin-top:6px; }
     .btn{
-      height: 50px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.10);
+      height:50px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.05);
       color: rgba(255,255,255,.92);
-      font-weight: 900;
-      font-size: 14px;
+      font-weight:900;
+      font-size:14px;
       flex:1;
       cursor:pointer;
       user-select:none;
     }
     .btn.primary{
-      flex: 1.2;
+      flex:1.2;
       border-color: rgba(103,229,255,.40);
       background: rgba(103,229,255,.15);
-      color: #fff;
+      color:#fff;
     }
     .btn:active{ transform: scale(.99); }
 
-    /* small helper */
-    .mt8{ margin-top: 8px; }
-    .mt12{ margin-top: 12px; }
+    /* small spacing helpers */
+    .mt8{ margin-top:8px; }
+    .mt12{ margin-top:12px; }
   </style>
 </head>
 
@@ -617,17 +530,16 @@
   <div class="app" id="app">
     <div class="topbar">
       <div class="ghost"></div>
-
       <div class="city" id="cityTitle">City</div>
-
-      <div class="round-btn" id="openMenu" title="Menu">
-        <span>≡</span>
-      </div>
+      <div class="round-btn" id="openMenu" title="Menu"><span>≡</span></div>
     </div>
 
-    <div class="section mt8">
-      <div class="neon-card enabled">
+    <div class="mt8" style="padding:0 var(--sidePad);">
+      <div class="neon-card enabled" style="height:90px;">
+        <div class="tint"></div>
+        <div class="ring"></div>
         <div class="comet" aria-hidden="true"></div>
+
         <div class="timer">
           <div class="icon">⏱</div>
           <div class="meta">
@@ -644,38 +556,37 @@
     <div class="list" id="prayerList"></div>
   </div>
 
-  <!-- SIDE MENU -->
+  <!-- MENU -->
   <div class="overlay" id="overlay"></div>
   <div class="side" id="side">
     <div class="side-card">
+      <div class="tint"></div>
       <div class="side-inner">
         <div class="side-header">
           <div class="side-title">
             <div class="t" id="menuTitle">Menu</div>
             <div class="s" id="menuSub">Settings & support</div>
           </div>
-
           <button class="chipbtn" id="backBtn" style="display:none;">Back</button>
           <button class="chipbtn" id="closeBtn">Close</button>
         </div>
 
         <div class="divider"></div>
-
         <div class="menu" id="menuBody"></div>
-
-        <div class="version">v 1.0.0 (UI skeleton)</div>
+        <div class="version">v 1.0.0 (skeleton)</div>
       </div>
     </div>
   </div>
 
-  <!-- BOTTOM SHEET (EDIT TIME) -->
+  <!-- TIME SHEET -->
   <div class="sheet-overlay" id="sheetOverlay">
     <div class="sheet">
+      <div class="tint"></div>
       <div class="sheet-inner">
         <div class="sheet-head">
           <div class="title">
             <div class="t" id="sheetTitle">Adjust time</div>
-            <div class="s">Change prayer time (UI only)</div>
+            <div class="s">Skeleton only</div>
           </div>
           <button class="chipbtn" id="sheetClose">Close</button>
         </div>
@@ -701,61 +612,55 @@
   </div>
 
   <script>
-    /**
-     * Telegram Mini App UI skeleton (one file).
-     */
+    // =========================================================
+    //  Telegram Mini App — ONE FILE — SKELETON (no real API)
+    //  Comet border rotates like your Compose phase runner.
+    // =========================================================
 
-    // ==== 1) BACKGROUND ====
-    // В репо у тебя bg_main.png. Делаем png по умолчанию + fallback на jpg.
+    // --- Background file (place bg_main.png near this html) ---
     const BG_CANDIDATES = ["bg_main.png", "bg_main.jpg"];
     const bg = document.getElementById("bg");
-
-    function setBackground(url){
-      bg.style.setProperty("--bg-img", `url('${url}')`);
-    }
-
-    // Try load first existing bg
+    function setBackground(url){ bg.style.setProperty("--bg-img", `url('${url}')`); }
     (function initBg(){
       const tryNext = (i) => {
-        if (i >= BG_CANDIDATES.length) {
-          // no bg found -> leave gradient only
-          return;
-        }
+        if (i >= BG_CANDIDATES.length) return;
         const url = BG_CANDIDATES[i];
         const img = new Image();
         img.onload = () => setBackground(url);
-        img.onerror = () => tryNext(i + 1);
-        img.src = url + "?v=" + Date.now(); // anti-cache while testing
+        img.onerror = () => tryNext(i+1);
+        img.src = url + "?v=" + Date.now();
       };
       tryNext(0);
     })();
 
-    // ==== 2) DATA (mock) ====
+    // --- Mock methods (CalcMethod) ---
     const METHODS = [
-      { key: "ISNA", title: "ISNA" },
-      { key: "MWL", title: "MWL" },
-      { key: "UMM_AL_QURA", title: "Umm al-Qura" },
-      { key: "EGYPT", title: "Egypt" },
-      { key: "MOONSIGHTING", title: "Moonsighting" },
+      { key:"ISNA", title:"ISNA" },
+      { key:"MWL", title:"MWL" },
+      { key:"UMM_AL_QURA", title:"Umm al-Qura" },
+      { key:"EGYPT", title:"Egypt" },
+      { key:"MOONSIGHTING", title:"Moonsighting" },
     ];
 
+    // --- Mock prayers (PrayerTime) ---
     const PRAYERS = [
-      { key:"Fajr", name:"Fajr", ar:"الفجر", time:"06:35" },
-      { key:"Dhuhr", name:"Dhuhr", ar:"الظهر", time:"12:30" },
-      { key:"Asr", name:"Asr", ar:"العصر", time:"13:47" },
-      { key:"Maghrib", name:"Maghrib", ar:"المغرب", time:"16:00" },
-      { key:"Isha", name:"Isha", ar:"العشاء", time:"17:30" },
+      { key:"Fajr",    name:"Fajr",    ar:"الفجر",   time:"06:35" },
+      { key:"Dhuhr",   name:"Dhuhr",   ar:"الظهر",   time:"12:30" },
+      { key:"Asr",     name:"Asr",     ar:"العصر",   time:"13:47" },
+      { key:"Maghrib", name:"Maghrib", ar:"المغرب",  time:"16:00" },
+      { key:"Isha",    name:"Isha",    ar:"العشاء",  time:"17:30" },
     ];
 
+    // --- State (skeleton) ---
     let state = {
       city: "City",
       method: "UMM_AL_QURA",
       nextPrayerKey: "Fajr",
       remaining: "00:12:34",
-      overrides: new Set(),
+      overrides: new Set(), // which prayers were "edited"
     };
 
-    // ==== 3) RENDER MAIN UI ====
+    // --- Main UI refs ---
     const cityTitle = document.getElementById("cityTitle");
     const remainingEl = document.getElementById("remaining");
     const untilEl = document.getElementById("until");
@@ -775,10 +680,7 @@
         const el = document.createElement("div");
         el.className = "chip" + (m.key === state.method ? " selected" : "");
         el.textContent = m.title;
-        el.onclick = () => {
-          state.method = m.key;
-          renderChips();
-        };
+        el.onclick = () => { state.method = m.key; renderChips(); };
         chips.appendChild(el);
       });
     }
@@ -786,14 +688,14 @@
     function renderPrayerList(){
       list.innerHTML = "";
       PRAYERS.forEach(p => {
-        const card = document.createElement("div");
         const isNext = p.key === state.nextPrayerKey;
 
+        const card = document.createElement("div");
         card.className = "neon-card prayer" + (isNext ? " enabled next" : "");
 
-        // comet element only for enabled cards
+        // Enabled card => tint + ring + comet like Compose highlight
         card.innerHTML = `
-          ${isNext ? `<div class="comet" aria-hidden="true"></div>` : ``}
+          ${isNext ? `<div class="tint"></div><div class="ring"></div><div class="comet" aria-hidden="true"></div>` : ``}
           <div class="dot"></div>
           <div class="p-info">
             <div class="p-name">${p.name}</div>
@@ -810,22 +712,20 @@
         const resetBtn = card.querySelectorAll(".tiny-btn")[1];
 
         editBtn.onclick = () => openSheet(p);
-        resetBtn.onclick = () => {
-          state.overrides.delete(p.key);
-          renderPrayerList();
-        };
+        resetBtn.onclick = () => { state.overrides.delete(p.key); renderPrayerList(); };
 
         list.appendChild(card);
       });
     }
 
-    // ==== 4) SIDE MENU ====
+    // =========================================================
+    //  SIDE MENU (SOLID)
+    // =========================================================
     const overlay = document.getElementById("overlay");
     const side = document.getElementById("side");
     const openMenuBtn = document.getElementById("openMenu");
     const closeBtn = document.getElementById("closeBtn");
     const backBtn = document.getElementById("backBtn");
-
     const menuTitle = document.getElementById("menuTitle");
     const menuSub = document.getElementById("menuSub");
     const menuBody = document.getElementById("menuBody");
@@ -917,14 +817,14 @@
         menuBody.querySelector("#langItem").onclick = () => { menuPage = MenuPage.LANGUAGE; renderMenu(); };
         menuBody.querySelector("#ringItem").onclick = () => { menuPage = MenuPage.RINGTONE; renderMenu(); };
 
-        menuBody.querySelector("#feedbackLink").onclick = () => alert("Feedback: позже откроем Telegram group/chat");
-        menuBody.querySelector("#rateLink").onclick = () => alert("Rate: позже откроем Play Store");
-        menuBody.querySelector("#shareLink").onclick = () => alert("Share: позже сделаем шаринг ссылки");
-        menuBody.querySelector("#privacyLink").onclick = () => alert("Privacy: позже откроем страницу");
-        menuBody.querySelector("#siteLink").onclick = () => alert("Site: позже откроем страницу");
-
-        menuBody.querySelector("#notifyItem").onclick = () => alert("Notify: UI-only (позже циклично 0/5/10/15/30)");
-        menuBody.querySelector("#soundItem").onclick = () => alert("Sound: UI-only (позже SOUND/SILENT)");
+        // skeleton actions
+        menuBody.querySelector("#feedbackLink").onclick = () => alert("Skeleton: open Telegram feedback");
+        menuBody.querySelector("#rateLink").onclick = () => alert("Skeleton: open Play Store");
+        menuBody.querySelector("#shareLink").onclick = () => alert("Skeleton: share link");
+        menuBody.querySelector("#privacyLink").onclick = () => alert("Skeleton: privacy policy");
+        menuBody.querySelector("#siteLink").onclick = () => alert("Skeleton: site");
+        menuBody.querySelector("#notifyItem").onclick = () => alert("Skeleton: notify cycle 0/5/10/15/30");
+        menuBody.querySelector("#soundItem").onclick = () => alert("Skeleton: sound/silent toggle");
         return;
       }
 
@@ -956,12 +856,8 @@
             </div>
           `).join("")}
         `;
-
         menuBody.querySelectorAll(".lang").forEach(el => {
-          el.onclick = () => {
-            const tag = el.getAttribute("data-tag") || "";
-            alert("Language pick (UI-only): " + (tag || "system"));
-          };
+          el.onclick = () => alert("Skeleton: pick language = " + (el.getAttribute("data-tag") || "system"));
         });
         return;
       }
@@ -973,32 +869,30 @@
           <div class="section-title">Ringtones</div>
           ${[
             ["", "Default"],
-            ["content://ringtone/1", "Adhan 1 (mock)"],
-            ["content://ringtone/2", "Adhan 2 (mock)"],
-            ["content://ringtone/3", "Soft tone (mock)"],
+            ["mock://adhan1", "Adhan 1 (mock)"],
+            ["mock://adhan2", "Adhan 2 (mock)"],
+            ["mock://soft", "Soft tone (mock)"],
           ].map(([uri, title]) => `
             <div class="item tone" data-uri="${uri}">
               <div class="ic">🎵</div>
               <div class="tx">
                 <div class="a">${title}</div>
-                <div class="b">${uri ? "Selected (UI-only)" : "Default"}</div>
+                <div class="b">${uri ? "Select (skeleton)" : "Default"}</div>
               </div>
               <div class="arr">›</div>
             </div>
           `).join("")}
         `;
-
         menuBody.querySelectorAll(".tone").forEach(el => {
-          el.onclick = () => {
-            const uri = el.getAttribute("data-uri") || "";
-            alert("Ringtone pick (UI-only): " + (uri || "default"));
-          };
+          el.onclick = () => alert("Skeleton: pick ringtone = " + (el.getAttribute("data-uri") || "default"));
         });
         return;
       }
     }
 
-    // ==== 5) BOTTOM SHEET ====
+    // =========================================================
+    //  TIME SHEET (SOLID)
+    // =========================================================
     const sheetOverlay = document.getElementById("sheetOverlay");
     const sheetClose = document.getElementById("sheetClose");
     const sheetTitle = document.getElementById("sheetTitle");
@@ -1013,8 +907,8 @@
       editingPrayer = prayer;
       sheetTitle.textContent = prayer.name;
       const [hh, mm] = (prayer.time || "00:00").split(":");
-      hourInput.value = (hh || "00").padStart(2,"0");
-      minInput.value  = (mm || "00").padStart(2,"0");
+      hourInput.value = String(hh || "00").padStart(2,"0");
+      minInput.value  = String(mm || "00").padStart(2,"0");
       sheetOverlay.classList.add("show");
     }
     function closeSheet(){
@@ -1042,7 +936,6 @@
       closeSheet();
       renderPrayerList();
     };
-
     saveBtn.onclick = () => {
       if (!editingPrayer) return;
       state.overrides.add(editingPrayer.key);
@@ -1050,7 +943,9 @@
       renderPrayerList();
     };
 
-    // ==== 6) Fake timer tick ====
+    // =========================================================
+    //  Fake timer tick (skeleton)
+    // =========================================================
     let fakeSeconds = 12*60 + 34;
     setInterval(() => {
       fakeSeconds = Math.max(0, fakeSeconds - 1);
@@ -1062,7 +957,7 @@
       if (fakeSeconds === 0) fakeSeconds = 14*60 + 10;
     }, 1000);
 
-    // ==== INIT ====
+    // INIT
     renderTop();
     renderChips();
     renderPrayerList();
