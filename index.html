@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
@@ -15,12 +16,15 @@
       --card:#0b0f12;
       --glass: rgba(255,255,255,.06);
       --line: rgba(255,255,255,.10);
+      --line2: rgba(255,255,255,.06);
       --txt:#ffffff;
       --muted: rgba(255,255,255,.55);
       --muted2: rgba(255,255,255,.35);
       --neon:#67E5FF;
+      --neon2: rgba(103,229,255,.22);
       --shadow: 0 10px 30px rgba(0,0,0,.45);
       --r: 22px;
+      --pad: 14px;
       --safeTop: env(safe-area-inset-top);
       --safeBot: env(safe-area-inset-bottom);
     }
@@ -35,6 +39,7 @@
       color:var(--txt);
       overflow-x:hidden;
     }
+
     body:before{
       content:"";
       position:fixed; inset:0;
@@ -76,7 +81,6 @@
       cursor:pointer;
       user-select:none;
       min-width: 0;
-      flex: 1;
     }
 
     .pill .icon{
@@ -95,7 +99,7 @@
       font-weight: 900;
       font-size: 15px;
       line-height: 1.1;
-      max-width: 260px;
+      max-width: 220px;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -292,83 +296,6 @@
       gap:10px;
     }
 
-    /* reminders card (BOT) */
-    .remCard{
-      margin-top: 12px;
-      padding: 14px;
-      border-radius: 20px;
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      border: 1px solid rgba(255,255,255,.10);
-      position:relative;
-      overflow:hidden;
-    }
-    .remTop{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      margin-bottom: 8px;
-    }
-    .remTitle{
-      font-weight: 950;
-      font-size: 14px;
-      color: rgba(255,255,255,.92);
-    }
-    .remSub{
-      font-weight: 800;
-      font-size: 11px;
-      color: rgba(255,255,255,.40);
-      line-height: 1.35;
-    }
-    .switch{
-      width: 54px;
-      height: 32px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.05);
-      position:relative;
-      cursor:pointer;
-      flex:0 0 auto;
-    }
-    .switch.on{
-      border-color: rgba(103,229,255,.55);
-      background: rgba(103,229,255,.10);
-      box-shadow: 0 0 0 2px rgba(103,229,255,.08) inset;
-    }
-    .knob{
-      position:absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      left: 6px;
-      width: 22px;
-      height: 22px;
-      border-radius:999px;
-      background: rgba(255,255,255,.80);
-      box-shadow: 0 6px 16px rgba(0,0,0,.35);
-      transition: left .18s ease;
-    }
-    .switch.on .knob{ left: 26px; background: rgba(255,255,255,.95); }
-    .remBtns{
-      display:flex;
-      gap:10px;
-      margin-top: 10px;
-    }
-    .btn{
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.04);
-      color:#fff;
-      padding: 10px 12px;
-      border-radius: 16px;
-      font-weight: 950;
-      cursor:pointer;
-      user-select:none;
-      flex:1;
-    }
-    .btn.primary{
-      border-color: rgba(103,229,255,.55);
-      background: rgba(103,229,255,.12);
-    }
-
     /* MODAL */
     .modalOverlay{
       position:fixed; inset:0;
@@ -468,12 +395,12 @@
       margin-top: 12px;
     }
 
-    /* RTL */
+    /* RTL tweaks for Arabic */
     [dir="rtl"] .topbar{ flex-direction: row-reverse; }
     [dir="rtl"] .pill{ direction: rtl; }
     [dir="rtl"] .timer{ direction: rtl; }
     [dir="rtl"] .prayer{ direction: rtl; }
-    [dir="rtl"] .remCard{ direction: rtl; }
+    [dir="rtl"] .names .n2{ opacity:.55; }
   </style>
 </head>
 
@@ -506,27 +433,10 @@
       </div>
     </div>
 
-    <!-- ✅ Oповещения через БОТА -->
-    <div class="remCard" id="remCard">
-      <div class="remTop">
-        <div>
-          <div class="remTitle" id="remTitle">—</div>
-          <div class="remSub" id="remSub">—</div>
-        </div>
-        <div class="switch" id="remSwitch" role="switch" aria-checked="false">
-          <div class="knob"></div>
-        </div>
-      </div>
-      <div class="remBtns">
-        <button class="btn primary" id="openBotBtn">—</button>
-        <button class="btn" id="syncBotBtn">—</button>
-      </div>
-    </div>
-
     <div class="row" id="methodRow"></div>
     <div class="list" id="prayerList"></div>
 
-    <!-- ✅ низ: без кнопок "обновить/спутник" -->
+    <!-- ✅ низ: только статус, без кнопок -->
     <div class="footer">
       <div id="statusText">—</div>
       <div id="noteText"></div>
@@ -557,17 +467,11 @@
     </div>
   </div>
 
-<script>
+  <script>
 (() => {
-  // ============================================================
-  // ✅ НАСТРОЙКИ (ОБЯЗАТЕЛЬНО ПОМЕНЯЙ)
-  // ============================================================
-  const API_BASE = "https://YOUR-DOMAIN.com"; // например: https://prayertimes-barakat.onrender.com
-  const BOT_USERNAME = "YOUR_BOT_USERNAME";   // без @, например: PrayerTimeBarakat_bot
-
-  // ============================================================
+  // ---------------------------
   // Telegram init (safe)
-  // ============================================================
+  // ---------------------------
   const tg = window.Telegram?.WebApp;
   try {
     tg?.ready?.();
@@ -576,13 +480,12 @@
     tg?.setBackgroundColor?.('#06080b');
   } catch(_) {}
 
-  // ============================================================
+  // ---------------------------
   // i18n
-  // ============================================================
+  // ---------------------------
   const i18n = {
     ru: {
       city_detecting: "Определяем город…",
-      city_tap_choose: "Нажмите, чтобы выбрать город",
       city_pick: "Выбор города",
       city_pick_sub: "Страна и город — с подсказками",
       city_pick_hint: "Начните вводить: “Berlin”, “Dubai”, “Москва”… Выберите подсказку. Можно сохранить несколько городов.",
@@ -593,29 +496,16 @@
       status_ok: "Обновлено",
       status_loading: "Загрузка…",
       status_err: "Не удалось обновить",
-
       fajr: "Фаджр",
       dhuhr: "Зухр",
       asr: "Аср",
       maghrib: "Магриб",
       isha: "Иша",
-
       saved: "Сохранённые",
       search_results: "Результаты",
-
-      rem_title: "Оповещения через бота (за 15 минут)",
-      rem_sub: "Чтобы бот мог писать — откройте бота и нажмите Start один раз.",
-      rem_on: "Оповещения: включены",
-      rem_off: "Оповещения: выключены",
-      open_bot: "Открыть бота",
-      sync_bot: "Синхронизировать",
-      sync_ok: "Настройки отправлены боту ✅",
-      sync_need_city: "Сначала выберите город",
-      sync_fail: "Не удалось синхронизировать",
     },
     en: {
       city_detecting: "Detecting city…",
-      city_tap_choose: "Tap to choose city",
       city_pick: "Choose city",
       city_pick_sub: "Country & city with suggestions",
       city_pick_hint: "Start typing: “Berlin”, “Dubai”, “Moscow”… Pick a suggestion. You can save multiple cities.",
@@ -626,29 +516,16 @@
       status_ok: "Updated",
       status_loading: "Loading…",
       status_err: "Update failed",
-
       fajr: "Fajr",
       dhuhr: "Dhuhr",
       asr: "Asr",
       maghrib: "Maghrib",
       isha: "Isha",
-
       saved: "Saved",
       search_results: "Results",
-
-      rem_title: "Bot reminders (15 minutes before)",
-      rem_sub: "To receive messages, open the bot and press Start once.",
-      rem_on: "Reminders: ON",
-      rem_off: "Reminders: OFF",
-      open_bot: "Open bot",
-      sync_bot: "Sync",
-      sync_ok: "Settings sent to the bot ✅",
-      sync_need_city: "Choose a city first",
-      sync_fail: "Sync failed",
     },
     ar: {
       city_detecting: "جارٍ تحديد المدينة…",
-      city_tap_choose: "اضغط لاختيار المدينة",
       city_pick: "اختيار المدينة",
       city_pick_sub: "الدولة والمدينة مع اقتراحات",
       city_pick_hint: "ابدأ الكتابة: “Berlin”, “Dubai”… اختر من الاقتراحات. يمكنك حفظ عدة مدن.",
@@ -659,25 +536,13 @@
       status_ok: "تم التحديث",
       status_loading: "جارٍ التحميل…",
       status_err: "فشل التحديث",
-
       fajr: "الفجر",
       dhuhr: "الظهر",
       asr: "العصر",
       maghrib: "المغرب",
       isha: "العشاء",
-
       saved: "محفوظ",
       search_results: "النتائج",
-
-      rem_title: "تنبيهات عبر البوت (قبل 15 دقيقة)",
-      rem_sub: "لتلقي الرسائل افتح البوت واضغط Start مرة واحدة.",
-      rem_on: "التنبيهات: مفعّلة",
-      rem_off: "التنبيهات: متوقفة",
-      open_bot: "فتح البوت",
-      sync_bot: "مزامنة",
-      sync_ok: "تم إرسال الإعدادات ✅",
-      sync_need_city: "اختر مدينة أولاً",
-      sync_fail: "فشلت المزامنة",
     },
   };
 
@@ -689,7 +554,6 @@
     { key:"Isha",    ar:"العشاء",   nameKey:"isha" },
   ];
 
-  // Aladhan method ids
   const METHODS = [
     { id: 2,  code:"ISNA",        title:"ISNA" },
     { id: 3,  code:"MWL",         title:"MWL" },
@@ -698,9 +562,9 @@
     { id: 15, code:"MOONSIGHTING",title:"Moonsighting" },
   ];
 
-  // ============================================================
-  // storage
-  // ============================================================
+  // ---------------------------
+  // storage helpers
+  // ---------------------------
   const S = {
     get lang(){ return localStorage.getItem("pt_lang") || "ru"; },
     set lang(v){ localStorage.setItem("pt_lang", v); },
@@ -714,14 +578,11 @@
       try { return JSON.parse(localStorage.getItem("pt_saved") || "[]"); } catch(_) { return []; }
     },
     set savedCities(v){ localStorage.setItem("pt_saved", JSON.stringify(v)); },
-
-    get remEnabled(){ return (localStorage.getItem("pt_bot_rem_enabled") || "1") === "1"; },
-    set remEnabled(v){ localStorage.setItem("pt_bot_rem_enabled", v ? "1" : "0"); },
   };
 
-  // ============================================================
+  // ---------------------------
   // DOM
-  // ============================================================
+  // ---------------------------
   const cityPill   = document.getElementById("cityPill");
   const cityTitle  = document.getElementById("cityTitle");
   const citySub    = document.getElementById("citySub");
@@ -735,13 +596,6 @@
 
   const statusText = document.getElementById("statusText");
   const noteText   = document.getElementById("noteText");
-
-  // reminders UI (bot)
-  const remTitle = document.getElementById("remTitle");
-  const remSub = document.getElementById("remSub");
-  const remSwitch = document.getElementById("remSwitch");
-  const openBotBtn = document.getElementById("openBotBtn");
-  const syncBotBtn = document.getElementById("syncBotBtn");
 
   // modal
   const modalOverlay = document.getElementById("modalOverlay");
@@ -758,18 +612,18 @@
   const langEn = document.getElementById("langEn");
   const langAr = document.getElementById("langAr");
 
-  // ============================================================
+  // ---------------------------
   // state
-  // ============================================================
+  // ---------------------------
   let lang = S.lang;
   let method = S.method;
-  let city = S.city;   // {name, display, lat, lon}
-  let timings = null;  // {Fajr:"HH:MM", ...}
+  let city = S.city; // {name, display, lat, lon}
+  let timings = null; // {Fajr:"HH:MM", ...}
   let timerTick = null;
 
-  // ============================================================
-  // helpers
-  // ============================================================
+  // ---------------------------
+  // UI helpers
+  // ---------------------------
   function t(key, ...args){
     const d = i18n[lang] || i18n.ru;
     const v = d[key];
@@ -804,28 +658,6 @@
     return { next: {...first, at: tomorrow}, ms: tomorrow.getTime() - now.getTime() };
   }
 
-  function escapeHtml(s){
-    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[c]));
-  }
-
-  function methodIdFromCode(code){
-    return (METHODS.find(m => m.code === code)?.id) ?? 4;
-  }
-
-  function setStatus(text){ statusText.textContent = text; }
-
-  function renderCityPill(){
-    if (!city) {
-      cityTitle.textContent = t("city_detecting");
-      citySub.textContent = t("city_tap_choose");
-      return;
-    }
-    cityTitle.textContent = city.name || city.display || "—";
-    citySub.textContent = city.display || "";
-  }
-
   function buildPrayerItems(){
     if (!timings) return [];
     const today = new Date();
@@ -851,8 +683,6 @@
         S.method = method;
         renderMethods();
         await refreshTimings();
-        // при смене метода — отправим на сервер (если выбран город)
-        if (city) await syncToBotServer();
       };
       methodRow.appendChild(b);
     });
@@ -885,7 +715,6 @@
     if (!timings) {
       remainText.textContent = "--:--:--";
       nextText.textContent = "—";
-      untilLabel.textContent = t("until_next");
       return;
     }
 
@@ -908,86 +737,29 @@
     if (idx >= 0 && cards[idx]) cards[idx].classList.add("next");
   }
 
-  function renderRemindersUI(){
-    remTitle.textContent = t("rem_title");
-    remSub.textContent = t("rem_sub");
-    openBotBtn.textContent = t("open_bot");
-    syncBotBtn.textContent = t("sync_bot");
-
-    const on = S.remEnabled;
-    remSwitch.classList.toggle("on", on);
-    remSwitch.setAttribute("aria-checked", on ? "true" : "false");
-    noteText.textContent = on ? t("rem_on") : t("rem_off");
+  function setStatus(text){
+    statusText.textContent = text;
   }
 
-  // ============================================================
-  // API calls to your server (bot notifications)
-  // ============================================================
-  function getInitData(){
-    return window.Telegram?.WebApp?.initData || "";
-  }
-
-  async function apiPost(path, body){
-    const url = API_BASE.replace(/\/+$/,"") + path;
-    const res = await fetch(url, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify(body)
-    });
-    // сервер может вернуть 401 если initData невалидный
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    return await res.json().catch(() => ({}));
-  }
-
-  async function syncToBotServer(){
+  function renderCityPill(){
     if (!city) {
-      try { tg?.showAlert?.(t("sync_need_city")); } catch(_) {}
+      cityTitle.textContent = t("city_detecting");
+      citySub.textContent = "—";
       return;
     }
-    const initData = getInitData();
-    if (!initData) {
-      // вне Telegram WebApp не синкаем
-      return;
-    }
-
-    const methodId = methodIdFromCode(method);
-
-    try {
-      // 1) сохранить город/метод на сервере
-      await apiPost("/api/save", {
-        initData,
-        lat: Number(city.lat),
-        lon: Number(city.lon),
-        method: methodId
-      });
-
-      // 2) сохранить включенность напоминаний
-      await apiPost("/api/reminders", {
-        initData,
-        enabled: !!S.remEnabled
-      });
-
-      setStatus(t("sync_ok"));
-      try { tg?.HapticFeedback?.notificationOccurred?.("success"); } catch(_) {}
-    } catch(e) {
-      console.error(e);
-      setStatus(t("sync_fail"));
-      try { tg?.HapticFeedback?.notificationOccurred?.("error"); } catch(_) {}
-    }
+    cityTitle.textContent = city.name || city.display || "—";
+    citySub.textContent = city.display || "";
   }
 
-  function openBot(){
-    const link = `https://t.me/${BOT_USERNAME}?start=1`;
-    try {
-      tg?.openTelegramLink?.(link);
-      return;
-    } catch(_) {}
-    try { window.open(link, "_blank"); } catch(_) {}
+  function escapeHtml(s){
+    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
   }
 
-  // ============================================================
+  // ---------------------------
   // City search (Nominatim)
-  // ============================================================
+  // ---------------------------
   let searchAbort = null;
   async function nominatimSearch(q){
     if (!q || q.trim().length < 2) return [];
@@ -995,7 +767,10 @@
     searchAbort = new AbortController();
 
     const url = "https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&q=" + encodeURIComponent(q.trim());
-    const res = await fetch(url, { signal: searchAbort.signal, headers: { "Accept": "application/json" } });
+    const res = await fetch(url, {
+      signal: searchAbort.signal,
+      headers: { "Accept": "application/json" }
+    });
     if (!res.ok) throw new Error("geocode failed");
     const arr = await res.json();
 
@@ -1013,94 +788,6 @@
     });
   }
 
-  // ============================================================
-  // Geolocation
-  // ============================================================
-  async function useGeolocation(){
-    setStatus(t("status_loading"));
-    try {
-      const pos = await new Promise((resolve, reject) => {
-        if (!navigator.geolocation) return reject(new Error("no geolocation"));
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: false,
-          timeout: 9000,
-          maximumAge: 120000
-        });
-      });
-
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-
-      const url = "https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&addressdetails=1&lat=" +
-        encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lon);
-
-      const res = await fetch(url, { headers: { "Accept": "application/json" } });
-      const data = await res.json();
-
-      const cityName =
-        data.address?.city || data.address?.town || data.address?.village || data.address?.municipality ||
-        (data.display_name?.split(",")[0] || "").trim();
-
-      const country = data.address?.country || "";
-      const short = [cityName, country].filter(Boolean).join(", ");
-      const picked = {
-        name: short || cityName || "—",
-        display: data.display_name || short || "",
-        lat: parseFloat(lat),
-        lon: parseFloat(lon)
-      };
-
-      await pickCity(picked, true);
-      setStatus(t("status_ok"));
-    } catch (e) {
-      console.error(e);
-      setStatus(t("status_err"));
-      try { tg?.HapticFeedback?.notificationOccurred?.("error"); } catch(_) {}
-    }
-  }
-
-  // ============================================================
-  // Aladhan timings API (для отображения в мини-апп)
-  // ============================================================
-  async function fetchTimings(lat, lon){
-    const id = methodIdFromCode(method);
-    const url = `https://api.aladhan.com/v1/timings?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&method=${id}`;
-    const res = await fetch(url, { headers: { "Accept":"application/json" } });
-    if (!res.ok) throw new Error("aladhan http " + res.status);
-    const json = await res.json();
-    const tim = json?.data?.timings;
-    if (!tim) throw new Error("no timings");
-
-    const out = {};
-    PRAYERS.forEach(p => {
-      const raw = String(tim[p.key] || "").slice(0,5);
-      out[p.key] = raw.includes(":") ? raw : "00:00";
-    });
-    return out;
-  }
-
-  async function refreshTimings(){
-    if (!city) return;
-
-    setStatus(t("status_loading"));
-    try {
-      timings = await fetchTimings(city.lat, city.lon);
-      renderPrayers();
-      renderTimer();
-
-      if (timerTick) clearInterval(timerTick);
-      timerTick = setInterval(renderTimer, 1000);
-
-      setStatus(t("status_ok"));
-    } catch (e) {
-      console.error(e);
-      setStatus(t("status_err"));
-    }
-  }
-
-  // ============================================================
-  // Modal / City pick
-  // ============================================================
   function openModal(){
     modalTitle.textContent = t("city_pick");
     modalSub.textContent = t("city_pick_sub");
@@ -1117,7 +804,9 @@
     try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch(_) {}
   }
 
-  function closeModal(){ modalOverlay.classList.remove("show"); }
+  function closeModal(){
+    modalOverlay.classList.remove("show");
+  }
 
   function renderSavedCitiesIntoResults(){
     const saved = S.savedCities;
@@ -1129,7 +818,7 @@
     sep.textContent = t("saved");
     resultsEl.appendChild(sep);
 
-    saved.slice(0, 10).forEach(item => {
+    saved.slice(0, 8).forEach(item => {
       const el = document.createElement("div");
       el.className = "item saved";
       el.innerHTML = `<div class="t1">${escapeHtml(item.name)}</div><div class="t2">${escapeHtml(item.display || "")}</div>`;
@@ -1173,16 +862,101 @@
     }
 
     await refreshTimings();
-
-    // ✅ ВАЖНО: сразу синхронизируем с сервером, чтобы бот начал слать уведомления
-    await syncToBotServer();
-
     try { tg?.HapticFeedback?.notificationOccurred?.("success"); } catch(_) {}
   }
 
-  // ============================================================
+  // ---------------------------
+  // Geolocation
+  // ---------------------------
+  async function useGeolocation(){
+    setStatus(t("status_loading"));
+    try {
+      const pos = await new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error("no geolocation"));
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          timeout: 9000,
+          maximumAge: 120000
+        });
+      });
+
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      const url = "https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&addressdetails=1&lat=" +
+        encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lon);
+
+      const res = await fetch(url, { headers: { "Accept": "application/json" } });
+      const data = await res.json();
+
+      const cityName =
+        data.address?.city || data.address?.town || data.address?.village || data.address?.municipality ||
+        (data.display_name?.split(",")[0] || "").trim();
+
+      const country = data.address?.country || "";
+      const short = [cityName, country].filter(Boolean).join(", ");
+      const picked = {
+        name: short || cityName || "—",
+        display: data.display_name || short || "",
+        lat: parseFloat(lat),
+        lon: parseFloat(lon)
+      };
+
+      await pickCity(picked, true);
+      setStatus(t("status_ok"));
+    } catch (e) {
+      console.error(e);
+      setStatus(t("status_err"));
+      try { tg?.HapticFeedback?.notificationOccurred?.("error"); } catch(_) {}
+    }
+  }
+
+  // ---------------------------
+  // Aladhan timings API
+  // ---------------------------
+  function methodIdFromCode(code){
+    return (METHODS.find(m => m.code === code)?.id) ?? 4;
+  }
+
+  async function fetchTimings(lat, lon){
+    const id = methodIdFromCode(method);
+    const url = `https://api.aladhan.com/v1/timings?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&method=${id}`;
+    const res = await fetch(url, { headers: { "Accept":"application/json" } });
+    if (!res.ok) throw new Error("aladhan http " + res.status);
+    const json = await res.json();
+    const tim = json?.data?.timings;
+    if (!tim) throw new Error("no timings");
+
+    const out = {};
+    PRAYERS.forEach(p => {
+      const raw = String(tim[p.key] || "").slice(0,5);
+      out[p.key] = raw.includes(":") ? raw : "00:00";
+    });
+    return out;
+  }
+
+  async function refreshTimings(){
+    if (!city) return;
+
+    setStatus(t("status_loading"));
+    try {
+      timings = await fetchTimings(city.lat, city.lon);
+      renderPrayers();
+      renderTimer();
+
+      if (timerTick) clearInterval(timerTick);
+      timerTick = setInterval(renderTimer, 1000);
+
+      setStatus(t("status_ok"));
+    } catch (e) {
+      console.error(e);
+      setStatus(t("status_err"));
+    }
+  }
+
+  // ---------------------------
   // Language switching
-  // ============================================================
+  // ---------------------------
   async function setLang(newLang){
     lang = newLang;
     S.lang = lang;
@@ -1193,14 +967,13 @@
     renderMethods();
     renderPrayers();
     renderTimer();
-    renderRemindersUI();
 
     if (modalOverlay.classList.contains("show")) openModal();
   }
 
-  // ============================================================
+  // ---------------------------
   // Events
-  // ============================================================
+  // ---------------------------
   cityPill.onclick = openModal;
   modalClose.onclick = closeModal;
   modalOverlay.onclick = (e) => { if (e.target === modalOverlay) closeModal(); };
@@ -1238,49 +1011,36 @@
     }, 250);
   });
 
-  // reminders (bot)
-  remSwitch.onclick = async () => {
-    S.remEnabled = !S.remEnabled;
-    renderRemindersUI();
-
-    // синхронизируем включенность на сервер
-    await syncToBotServer();
-
-    try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch(_) {}
-  };
-
-  openBotBtn.onclick = () => openBot();
-  syncBotBtn.onclick = async () => {
-    await syncToBotServer();
-  };
-
-  // ============================================================
+  // ---------------------------
   // Boot
-  // ============================================================
+  // ---------------------------
   function boot(){
     setDirByLang();
     setLangButtons();
     renderMethods();
-    renderRemindersUI();
+    noteText.textContent = ""; // no reminders / notifications
 
-    renderCityPill();
-
-    // Если город уже сохранён — подтягиваем времена
-    if (city) {
-      refreshTimings();
-    } else {
+    if (!city) {
+      cityTitle.textContent = t("city_detecting");
+      citySub.textContent = "—";
       setStatus(t("status_loading"));
-      // Попробуем геолокацию один раз при старте
+
+      // try geolocation once at first run
       useGeolocation().finally(() => {
         if (!city) {
           setStatus(t("status_err"));
-          renderCityPill();
+          cityTitle.textContent = t("city_detecting");
+          citySub.textContent = (lang === "ar") ? "اضغط لاختيار المدينة" : (lang === "en" ? "Tap to choose city" : "Нажмите, чтобы выбрать город");
         }
       });
+    } else {
+      renderCityPill();
+      refreshTimings();
     }
   }
 
   boot();
+
 })();
 </script>
 </body>
