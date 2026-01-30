@@ -4,8 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="color-scheme" content="dark" />
-  <meta name="theme-color" content="#05070a" />
-  <title>PrayerTime Barakat</title>
+  <title>PrayerTime Barakat — Mini App</title>
 
   <!-- Telegram Mini App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -15,1346 +14,1108 @@
       --bg:#06080b;
       --card:#0b0f12;
       --glass: rgba(255,255,255,.06);
-      --border: rgba(255,255,255,.10);
+      --line: rgba(255,255,255,.10);
+      --line2: rgba(255,255,255,.06);
+      --txt:#ffffff;
       --muted: rgba(255,255,255,.55);
       --muted2: rgba(255,255,255,.35);
       --neon:#67E5FF;
-      --danger:#ff5c7a;
-      --ok:#7CFFB2;
-      --radius:18px;
-      --shadow: 0 12px 40px rgba(0,0,0,.45);
-      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      --neon2: rgba(103,229,255,.22);
+      --shadow: 0 10px 30px rgba(0,0,0,.45);
+      --r: 22px;
+      --pad: 14px;
+      --safeTop: env(safe-area-inset-top);
+      --safeBot: env(safe-area-inset-bottom);
     }
 
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
     body{
       margin:0;
-      font-family: var(--font);
-      background:
-        radial-gradient(900px 600px at 30% 10%, rgba(103,229,255,.10), transparent 55%),
-        radial-gradient(800px 500px at 80% 40%, rgba(103,229,255,.08), transparent 60%),
-        linear-gradient(180deg, #05070a, #070a0d 40%, #05070a);
-      color:#fff;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 50% -10%, rgba(103,229,255,.10), transparent 55%),
+                  linear-gradient(180deg, #05070a, #04060a 30%, #020407);
+      color:var(--txt);
+      overflow-x:hidden;
     }
 
-    .wrap{
+    /* subtle stars/noise */
+    body:before{
+      content:"";
+      position:fixed; inset:0;
+      background:
+        radial-gradient(1px 1px at 10% 10%, rgba(255,255,255,.08), transparent 60%),
+        radial-gradient(1px 1px at 30% 25%, rgba(255,255,255,.07), transparent 60%),
+        radial-gradient(1px 1px at 70% 18%, rgba(255,255,255,.06), transparent 60%),
+        radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,.06), transparent 60%),
+        radial-gradient(1px 1px at 20% 70%, rgba(255,255,255,.05), transparent 60%),
+        radial-gradient(1px 1px at 60% 78%, rgba(255,255,255,.06), transparent 60%);
+      pointer-events:none;
+      opacity:.6;
+    }
+
+    .app{
       min-height:100%;
-      padding: 10px 12px calc(12px + env(safe-area-inset-bottom));
-      max-width: 680px;
+      padding: calc(10px + var(--safeTop)) 12px calc(14px + var(--safeBot)) 12px;
+      max-width: 560px;
       margin: 0 auto;
     }
 
-    /* compact top */
-    .top{
+    .topbar{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      padding: 4px 2px 8px;
+      padding: 6px 2px 10px 2px;
     }
-    .brand{
+
+    .pill{
       display:flex;
-      flex-direction:column;
-      gap:2px;
-      line-height:1.05;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+      cursor:pointer;
+      user-select:none;
       min-width: 0;
     }
-    .brand .title{
-      font-size: 16px;
-      font-weight: 900;
-      letter-spacing:.2px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .brand .sub{
-      font-size: 11px;
-      color: var(--muted2);
-      font-weight: 800;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
 
-    .btn{
-      appearance:none;
-      border: 1px solid rgba(103,229,255,.35);
-      background: rgba(103,229,255,.12);
-      color:#fff;
-      font-weight: 900;
-      border-radius: 14px;
-      padding: 9px 11px;
-      cursor:pointer;
-      box-shadow: 0 10px 30px rgba(103,229,255,.08);
-      transition: transform .08s ease, opacity .2s ease;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-      white-space:nowrap;
-    }
-    .btn:active{ transform: scale(.98); }
-    .btn.secondary{
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-    }
-    .btn.danger{
-      border: 1px solid rgba(255,92,122,.35);
-      background: rgba(255,92,122,.10);
-    }
-    .btn:disabled{ opacity:.55; cursor:not-allowed; }
-
-    .grid{
+    .pill .icon{
+      width: 30px;
+      height: 30px;
       display:grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
+      place-items:center;
+      border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, rgba(103,229,255,.18), transparent 60%);
+      border: 1px solid rgba(103,229,255,.25);
+      box-shadow: 0 0 0 1px rgba(103,229,255,.08) inset;
+      flex:0 0 auto;
+    }
+
+    .pill .title{
+      font-weight: 900;
+      font-size: 15px;
+      line-height: 1.1;
+      max-width: 220px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .pill .sub{
+      display:block;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted2);
+      margin-top: 2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .lang{
+      display:flex;
+      gap:6px;
+      flex:0 0 auto;
+    }
+    .lang button{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.82);
+      font-weight: 900;
+      font-size: 12px;
+      padding: 10px 10px;
+      border-radius: 14px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .lang button.active{
+      border-color: rgba(103,229,255,.65);
+      box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset;
+      background: rgba(103,229,255,.10);
+      color:#fff;
     }
 
     .card{
-      border-radius: var(--radius);
+      border-radius: var(--r);
       background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
       border: 1px solid rgba(255,255,255,.12);
       box-shadow: var(--shadow);
       overflow:hidden;
       position:relative;
     }
-    .card::before{
+    .card:after{
       content:"";
-      position:absolute;
-      inset:-2px;
-      background: radial-gradient(520px 140px at 30% 10%, rgba(103,229,255,.18), transparent 60%);
+      position:absolute; inset:-2px;
       pointer-events:none;
-    }
-    .card-inner{
-      position:relative;
-      padding: 10px 12px;
+      opacity:.9;
+      background:
+        radial-gradient(500px 120px at 10% 20%, rgba(103,229,255,.12), transparent 60%),
+        radial-gradient(500px 120px at 90% 80%, rgba(103,229,255,.10), transparent 60%);
+      mix-blend-mode: screen;
     }
 
-    /* compact fields */
+    .timer{
+      height: 92px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding: 14px;
+    }
+
+    .badge{
+      width:44px;height:44px;
+      border-radius:999px;
+      display:grid;
+      place-items:center;
+      background: radial-gradient(circle at 30% 30%, rgba(103,229,255,.22), transparent 62%);
+      border:1px solid rgba(103,229,255,.22);
+      box-shadow: 0 0 18px rgba(103,229,255,.10);
+      flex:0 0 auto;
+      z-index:1;
+    }
+    .badge span{ font-size:18px; }
+
+    .timer .meta{ flex:1; min-width:0; z-index:1; }
+    .timer .meta .label{
+      font-size: 12px;
+      font-weight: 800;
+      color: rgba(255,255,255,.70);
+      margin-bottom: 2px;
+    }
+    .timer .meta .time{
+      font-size: 28px;
+      font-weight: 950;
+      letter-spacing: .5px;
+    }
+    .timer .next{
+      z-index:1;
+      font-size: 13px;
+      font-weight: 900;
+      color: rgba(255,255,255,.78);
+      white-space:nowrap;
+    }
+
     .row{
       display:flex;
       gap:8px;
-      flex-wrap:wrap;
-      align-items:flex-end;
+      flex-wrap:nowrap;
+      overflow:auto;
+      padding: 12px 2px 4px 2px;
+      scrollbar-width:none;
     }
-    .field{
-      flex: 1 1 160px;
-      min-width: 140px;
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      position:relative;
-    }
-    label{
-      font-size: 10px;
-      color: var(--muted2);
-      font-weight: 900;
-      letter-spacing:.25px;
-    }
-    select, input{
-      width:100%;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.22);
-      color:#fff;
-      padding: 10px 11px;
-      outline:none;
-      font-weight: 900;
-      font-size: 13px;
-    }
-    input::placeholder{ color: rgba(255,255,255,.35); font-weight:800; }
+    .row::-webkit-scrollbar{ display:none; }
 
-    /* autocomplete dropdown */
-    .dropdown{
-      position:absolute;
-      top: calc(100% + 6px);
-      left: 0;
-      right: 0;
-      z-index: 20;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(8,10,12,.95);
-      box-shadow: 0 18px 50px rgba(0,0,0,.55);
-      overflow:hidden;
-      display:none;
-    }
-    .dropdown.open{ display:block; }
-    .dropItem{
-      padding: 10px 11px;
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      align-items:center;
-      cursor:pointer;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-    }
-    .dropItem:last-child{ border-bottom:none; }
-    .dropItem:hover{ background: rgba(103,229,255,.08); }
-    .dropLeft{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-      min-width: 0;
-    }
-    .dropTitle{
-      font-weight: 1000;
-      font-size: 13px;
-      color: rgba(255,255,255,.92);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .dropSub{
-      font-size: 11px;
-      font-weight: 900;
-      color: rgba(255,255,255,.35);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .kbd{
-      font-size: 11px;
-      font-weight: 900;
-      color: rgba(255,255,255,.35);
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-      padding: 4px 8px;
-      border-radius: 999px;
-      white-space:nowrap;
-    }
-
-    /* favorites chips */
-    .chips{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top: 8px;
-    }
     .chip{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
+      flex:0 0 auto;
+      padding: 10px 12px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.05);
-      padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.03);
+      color: rgba(255,255,255,.80);
+      font-weight: 900;
+      font-size: 12px;
       cursor:pointer;
       user-select:none;
-      -webkit-tap-highlight-color: transparent;
-      max-width: 100%;
     }
-    .chip:hover{ background: rgba(103,229,255,.08); border-color: rgba(103,229,255,.30); }
-    .chip .txt{
-      font-size: 12px;
-      font-weight: 1000;
-      color: rgba(255,255,255,.86);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width: 210px;
-    }
-    .chip .x{
-      font-size: 12px;
-      font-weight: 1000;
-      color: rgba(255,255,255,.35);
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      display:grid;
-      place-items:center;
-    }
-    .chip .x:hover{ color:#fff; border-color: rgba(255,92,122,.45); background: rgba(255,92,122,.10); }
-
-    .hint{
-      font-size: 11px;
-      color: var(--muted2);
-      font-weight: 800;
-      margin-top: 8px;
-      line-height: 1.35;
-    }
-
-    /* compact timer */
-    .timer{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-    }
-    .pill{
-      border-radius: 999px;
-      border: 1px solid rgba(103,229,255,.35);
+    .chip.active{
+      border-color: rgba(103,229,255,.75);
       background: rgba(103,229,255,.10);
-      padding: 9px 10px;
-      font-weight: 1000;
-      display:inline-flex;
-      align-items:center;
-      gap: 10px;
-      min-width: 0;
-    }
-    .pill .icon{
-      width: 30px;
-      height: 30px;
-      border-radius: 999px;
-      display:grid;
-      place-items:center;
-      background: radial-gradient(circle at 30% 30%, rgba(103,229,255,.25), transparent 65%);
-      border: 1px solid rgba(103,229,255,.25);
-      flex: 0 0 auto;
-    }
-    .pill .big{
-      font-size: 20px;
-      letter-spacing:.4px;
-      line-height:1;
-    }
-    .pill .small{
-      font-size: 11px;
-      color: rgba(255,255,255,.75);
-      font-weight: 1000;
-      line-height:1.1;
-    }
-    .muted{
-      color: var(--muted);
-      font-weight: 900;
-      font-size: 12px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      min-width: 0;
-      max-width: 48%;
-      text-align:right;
+      color:#fff;
+      box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset;
     }
 
-    /* compact list */
     .list{
+      margin-top: 10px;
       display:flex;
       flex-direction:column;
-      gap: 8px;
-      padding: 4px 0 0;
+      gap:10px;
     }
-    .item{
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.16);
-      padding: 10px 11px;
+
+    .prayer{
+      height: 66px;
       display:flex;
-      justify-content:space-between;
       align-items:center;
       gap:12px;
+      padding: 12px 14px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.10);
+      position:relative;
+      overflow:hidden;
     }
-    .item.next{
-      border-color: rgba(103,229,255,.55);
-      box-shadow: 0 10px 30px rgba(103,229,255,.10);
-      background: linear-gradient(180deg, rgba(103,229,255,.10), rgba(0,0,0,.14));
+    .prayer.next{
+      border-color: rgba(103,229,255,.50);
+      box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset, 0 12px 30px rgba(0,0,0,.35);
     }
-    .pname{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-      min-width: 110px;
-      max-width: 65%;
+    .dot{
+      width: 10px; height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.20);
+      flex:0 0 auto;
     }
-    .pname .en{
-      font-size: 14px;
-      font-weight: 1000;
-      color: rgba(255,255,255,.92);
-    }
-    .pname .ar{
-      font-size: 12px;
-      font-weight: 900;
-      color: rgba(255,255,255,.38);
-    }
-    .ptime{
+    .prayer.next .dot{ background: var(--neon); }
+
+    .names{ flex:1; min-width:0; }
+    .names .n1{
+      font-weight: 950;
       font-size: 16px;
-      font-weight: 1100;
-      letter-spacing:.25px;
-      color: rgba(255,255,255,.88);
+      color: rgba(255,255,255,.92);
+      line-height: 1.05;
+    }
+    .names .n2{
+      font-size: 13px;
+      font-weight: 800;
+      color: rgba(255,255,255,.38);
+      margin-top: 3px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .ptime{
+      font-weight: 950;
+      font-size: 17px;
+      color: rgba(255,255,255,.86);
+      letter-spacing: .2px;
+      flex:0 0 auto;
+    }
+
+    .footer{
+      margin-top: 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      color: rgba(255,255,255,.28);
+      font-weight: 800;
+      font-size: 11px;
+      padding: 2px 2px 0 2px;
+      gap: 10px;
+    }
+    .footer .btn{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      color: rgba(255,255,255,.75);
+      padding: 8px 10px;
+      border-radius: 14px;
+      font-weight: 900;
+      cursor:pointer;
+      user-select:none;
       white-space:nowrap;
     }
 
-    .status{
+    /* MODAL */
+    .modalOverlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.65);
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      padding: 12px;
+      padding-bottom: calc(12px + var(--safeBot));
+      z-index:999;
+    }
+    .modalOverlay.show{ display:flex; }
+
+    .modal{
+      width:min(560px, 100%);
+      border-radius: 24px;
+      background: rgba(11,15,18,.98);
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+    .modalHeader{
+      padding: 14px 14px 10px 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .modalHeader .h{
+      font-size: 16px;
+      font-weight: 950;
+    }
+    .modalHeader .x{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color:#fff;
+      width: 38px; height: 38px;
+      border-radius: 14px;
+      font-weight: 950;
+      cursor:pointer;
+    }
+    .modalBody{ padding: 0 14px 14px 14px; }
+    .input{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.03);
+      color:#fff;
+      outline:none;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .hint{
       margin-top: 8px;
       font-size: 11px;
-      color: rgba(255,255,255,.40);
-      font-weight: 900;
+      font-weight: 800;
+      color: rgba(255,255,255,.35);
+      line-height: 1.35;
     }
-    .err{ color: rgba(255,92,122,.95); font-weight: 1000; }
-    .ok{ color: rgba(124,255,178,.9); font-weight: 1000; }
-
-    .foot{
-      padding: 10px 2px 0;
-      text-align:center;
-      color: rgba(255,255,255,.22);
-      font-weight: 1000;
-      font-size: 11px;
-    }
-
-    .topActions{
+    .results{
+      margin-top: 12px;
       display:flex;
+      flex-direction:column;
       gap:8px;
-      align-items:center;
+      max-height: 300px;
+      overflow:auto;
+      padding-right: 4px;
     }
-
-    .lang{
-      display:flex;
-      gap:6px;
-      align-items:center;
-    }
-    .langBtn{
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.05);
-      padding: 8px 10px;
-      font-weight: 1000;
-      font-size: 12px;
+    .item{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      border-radius: 16px;
+      padding: 12px 12px;
       cursor:pointer;
       user-select:none;
-      -webkit-tap-highlight-color: transparent;
     }
-    .langBtn.active{
-      border-color: rgba(103,229,255,.55);
-      background: rgba(103,229,255,.10);
-      box-shadow: 0 10px 30px rgba(103,229,255,.08);
+    .item .t1{
+      font-weight: 950;
+      font-size: 13px;
+      color: rgba(255,255,255,.92);
+      margin-bottom: 2px;
+    }
+    .item .t2{
+      font-weight: 800;
+      font-size: 11px;
+      color: rgba(255,255,255,.42);
+      line-height: 1.25;
+    }
+    .item.saved{
+      border-color: rgba(103,229,255,.35);
+      background: rgba(103,229,255,.05);
     }
 
-    /* small helper row under fields */
-    .miniRow{
+    .rowBtns{
       display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:space-between;
-      margin-top: 8px;
+      gap:10px;
+      margin-top: 12px;
     }
-    .miniLeft{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      flex-wrap:wrap;
+    .primary{
+      flex:1;
+      border:1px solid rgba(103,229,255,.55);
+      background: rgba(103,229,255,.12);
+      color:#fff;
+      padding: 12px 12px;
+      border-radius: 16px;
+      font-weight: 950;
+      cursor:pointer;
     }
+    .secondary{
+      flex:1;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color:#fff;
+      padding: 12px 12px;
+      border-radius: 16px;
+      font-weight: 950;
+      cursor:pointer;
+    }
+
+    /* RTL tweaks for Arabic */
+    [dir="rtl"] .topbar{ flex-direction: row-reverse; }
+    [dir="rtl"] .pill{ direction: rtl; }
+    [dir="rtl"] .timer{ direction: rtl; }
+    [dir="rtl"] .prayer{ direction: rtl; }
+    [dir="rtl"] .names .n2{ opacity:.55; }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div class="brand">
-        <div class="title">PrayerTime Barakat</div>
-        <div class="sub" id="subtitle">Выберите город — получайте время намаза</div>
+  <div class="app">
+    <div class="topbar">
+      <div class="pill" id="cityPill" role="button" aria-label="Choose city">
+        <div class="icon">📍</div>
+        <div style="min-width:0">
+          <div class="title" id="cityTitle">…</div>
+          <span class="sub" id="citySub">—</span>
+        </div>
       </div>
 
-      <div class="topActions">
-        <div class="lang" aria-label="Language">
-          <div class="langBtn" id="langRU">RU</div>
-          <div class="langBtn" id="langEN">EN</div>
-          <div class="langBtn" id="langAR">AR</div>
-        </div>
-        <button class="btn" id="btnRefresh">Обновить</button>
+      <div class="lang" aria-label="Language">
+        <button id="langRu">RU</button>
+        <button id="langEn">EN</button>
+        <button id="langAr">AR</button>
       </div>
     </div>
 
-    <div class="grid">
-      <!-- SETTINGS -->
-      <div class="card">
-        <div class="card-inner">
-          <div class="row">
-            <div class="field">
-              <label for="country" id="lblCountry">Страна</label>
-              <select id="country"></select>
-            </div>
-
-            <div class="field" id="cityField">
-              <label for="city" id="lblCity">Город</label>
-              <input id="city" type="text" placeholder="Например: Berlin" autocomplete="off" />
-              <div class="dropdown" id="cityDropdown"></div>
-            </div>
-
-            <div class="field">
-              <label for="method" id="lblMethod">Метод</label>
-              <select id="method">
-                <option value="4">Umm al-Qura</option>
-                <option value="2">ISNA</option>
-                <option value="3">MWL</option>
-                <option value="5">Egypt</option>
-                <option value="15">Moonsighting</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="miniRow">
-            <div class="miniLeft">
-              <button class="btn secondary" id="btnSaveCity">★ В избранное</button>
-              <button class="btn danger" id="btnClearFavs">Очистить</button>
-            </div>
-          </div>
-
-          <div class="chips" id="favChips"></div>
-
-          <div class="hint" id="hint">
-            Данные берутся из AlAdhan по городу. Если город не находится — попробуй написание на английском.
-          </div>
-
-          <div class="status" id="status">Готово.</div>
+    <div class="card">
+      <div class="timer">
+        <div class="badge"><span>⏱</span></div>
+        <div class="meta">
+          <div class="label" id="untilLabel">…</div>
+          <div class="time" id="remainText">--:--:--</div>
         </div>
+        <div class="next" id="nextText">—</div>
       </div>
+    </div>
 
-      <!-- TIMER -->
-      <div class="card">
-        <div class="card-inner timer">
-          <div class="pill">
-            <div class="icon">⏱</div>
-            <div style="min-width:0;">
-              <div class="small" id="untilLabel">До следующей молитвы</div>
-              <div class="big" id="countdown">--:--:--</div>
-            </div>
-          </div>
-          <div class="muted" id="nextInfo">Следующая: —</div>
+    <div class="row" id="methodRow"></div>
+
+    <div class="list" id="prayerList"></div>
+
+    <div class="footer">
+      <div id="statusText">—</div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn" id="btnRefresh">↻</button>
+        <button class="btn" id="btnUseGeo">📡</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- City Picker Modal -->
+  <div class="modalOverlay" id="modalOverlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modalHeader">
+        <div>
+          <div class="h" id="modalTitle">—</div>
+          <div class="hint" id="modalSub" style="margin-top:4px">—</div>
         </div>
+        <button class="x" id="modalClose">✕</button>
       </div>
+      <div class="modalBody">
+        <input class="input" id="cityInput" placeholder="..." autocomplete="off" />
+        <div class="hint" id="modalHint">—</div>
 
-      <!-- LIST -->
-      <div class="card">
-        <div class="card-inner">
-          <div class="muted" id="todayTitle" style="margin-bottom:8px;">Время молитв (сегодня)</div>
-          <div class="list" id="list"></div>
-          <div class="foot" id="foot">—</div>
+        <div class="results" id="results"></div>
+
+        <div class="rowBtns">
+          <button class="secondary" id="btnClearSaved">🗑</button>
+          <button class="primary" id="btnGeoInModal">📡</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script>
-    // -----------------------
-    // Telegram WebApp init
-    // -----------------------
-    (function initTelegram(){
-      try{
-        const tg = window.Telegram?.WebApp;
-        if (!tg) return;
-        tg.ready();
-        tg.expand();
-        tg.setHeaderColor?.("#05070a");
-        tg.setBackgroundColor?.("#05070a");
-      }catch(_){}
-    })();
+<script>
+(() => {
+  // ---------------------------
+  // Telegram init (safe)
+  // ---------------------------
+  const tg = window.Telegram?.WebApp;
+  try {
+    tg?.ready?.();
+    tg?.expand?.();
+    tg?.setHeaderColor?.('#06080b');
+    tg?.setBackgroundColor?.('#06080b');
+  } catch(_) {}
 
-    // -----------------------
-    // i18n
-    // -----------------------
-    const I18N = {
-      ru: {
-        subtitleEmpty: "Выберите город — получайте время намаза",
-        refresh: "Обновить",
-        country: "Страна",
-        city: "Город",
-        method: "Метод",
-        saveFav: "★ В избранное",
-        clearFavs: "Очистить",
-        hint: "Данные берутся из AlAdhan по городу. Если город не находится — попробуй написание на английском.",
-        statusReady: "Готово.",
-        statusLoading: "Загружаю время намаза…",
-        statusUpdated: "Обновлено ✅",
-        statusNeedCity: "Введите город.",
-        statusFallback: "Не удалось обновить. Показаны последние сохранённые данные.",
-        statusError: "Ошибка загрузки. Проверь город/интернет.",
-        untilNext: "До следующей молитвы",
-        nextFmt: (name, time) => `Следующая: ${name} в ${time}`,
-        nextNone: "Следующая: —",
-        today: "Время молитв (сегодня)",
-        placeholderCity: "Например: Berlin",
-        favEmpty: "Нет избранных городов",
-        confirmClear: "Очистить избранные города?",
-        addedFav: "Добавлено в избранное ✅",
-        removedFav: "Удалено",
-        alreadyFav: "Уже в избранном"
-      },
-      en: {
-        subtitleEmpty: "Choose a city — get prayer times",
-        refresh: "Refresh",
-        country: "Country",
-        city: "City",
-        method: "Method",
-        saveFav: "★ Save",
-        clearFavs: "Clear",
-        hint: "Data from AlAdhan by city. If not found — try English spelling.",
-        statusReady: "Ready.",
-        statusLoading: "Loading prayer times…",
-        statusUpdated: "Updated ✅",
-        statusNeedCity: "Enter a city.",
-        statusFallback: "Update failed. Showing last saved data.",
-        statusError: "Load error. Check city/internet.",
-        untilNext: "Until next prayer",
-        nextFmt: (name, time) => `Next: ${name} at ${time}`,
-        nextNone: "Next: —",
-        today: "Prayer times (today)",
-        placeholderCity: "e.g. Berlin",
-        favEmpty: "No saved cities",
-        confirmClear: "Clear saved cities?",
-        addedFav: "Saved ✅",
-        removedFav: "Removed",
-        alreadyFav: "Already saved"
-      },
-      ar: {
-        subtitleEmpty: "اختر مدينة — للحصول على أوقات الصلاة",
-        refresh: "تحديث",
-        country: "الدولة",
-        city: "المدينة",
-        method: "الطريقة",
-        saveFav: "★ حفظ",
-        clearFavs: "مسح",
-        hint: "البيانات من AlAdhan حسب المدينة. إذا لم يتم العثور — جرّب كتابة الاسم بالإنجليزية.",
-        statusReady: "جاهز.",
-        statusLoading: "جارٍ تحميل أوقات الصلاة…",
-        statusUpdated: "تم التحديث ✅",
-        statusNeedCity: "أدخل المدينة.",
-        statusFallback: "فشل التحديث. عرض آخر بيانات محفوظة.",
-        statusError: "خطأ في التحميل. تحقق من المدينة/الإنترنت.",
-        untilNext: "حتى الصلاة التالية",
-        nextFmt: (name, time) => `التالي: ${name} عند ${time}`,
-        nextNone: "التالي: —",
-        today: "أوقات الصلاة (اليوم)",
-        placeholderCity: "مثال: Berlin",
-        favEmpty: "لا توجد مدن محفوظة",
-        confirmClear: "مسح المدن المحفوظة؟",
-        addedFav: "تم الحفظ ✅",
-        removedFav: "تم الحذف",
-        alreadyFav: "محفوظ بالفعل"
+  // ---------------------------
+  // i18n
+  // ---------------------------
+  const i18n = {
+    ru: {
+      city_detecting: "Определяем город…",
+      city_pick: "Выбор города",
+      city_pick_sub: "Страна и город — с подсказками",
+      city_pick_hint: "Начните вводить: “Berlin”, “Dubai”, “Москва”… Выберите подсказку. Можно сохранить несколько городов.",
+      clear_saved: "Очистить",
+      use_geo: "Определить по геолокации",
+      until_next: "До следующего намаза",
+      until_fmt: (name) => `До: ${name}`,
+      status_ok: "Обновлено",
+      status_loading: "Загрузка…",
+      status_err: "Не удалось обновить",
+      refresh: "Обновить",
+      method: "Метод",
+      fajr: "Фаджр",
+      dhuhr: "Зухр",
+      asr: "Аср",
+      maghrib: "Магриб",
+      isha: "Иша",
+      next: "Следующий",
+      saved: "Сохранённые",
+      search_results: "Результаты",
+    },
+    en: {
+      city_detecting: "Detecting city…",
+      city_pick: "Choose city",
+      city_pick_sub: "Country & city with suggestions",
+      city_pick_hint: "Start typing: “Berlin”, “Dubai”, “Moscow”… Pick a suggestion. You can save multiple cities.",
+      clear_saved: "Clear",
+      use_geo: "Use geolocation",
+      until_next: "Until next prayer",
+      until_fmt: (name) => `Until: ${name}`,
+      status_ok: "Updated",
+      status_loading: "Loading…",
+      status_err: "Update failed",
+      refresh: "Refresh",
+      method: "Method",
+      fajr: "Fajr",
+      dhuhr: "Dhuhr",
+      asr: "Asr",
+      maghrib: "Maghrib",
+      isha: "Isha",
+      next: "Next",
+      saved: "Saved",
+      search_results: "Results",
+    },
+    ar: {
+      city_detecting: "جارٍ تحديد المدينة…",
+      city_pick: "اختيار المدينة",
+      city_pick_sub: "الدولة والمدينة مع اقتراحات",
+      city_pick_hint: "ابدأ الكتابة: “Berlin”, “Dubai”… اختر من الاقتراحات. يمكنك حفظ عدة مدن.",
+      clear_saved: "مسح",
+      use_geo: "استخدام الموقع",
+      until_next: "الوقت حتى الصلاة التالية",
+      until_fmt: (name) => `حتى: ${name}`,
+      status_ok: "تم التحديث",
+      status_loading: "جارٍ التحميل…",
+      status_err: "فشل التحديث",
+      refresh: "تحديث",
+      method: "الطريقة",
+      fajr: "الفجر",
+      dhuhr: "الظهر",
+      asr: "العصر",
+      maghrib: "المغرب",
+      isha: "العشاء",
+      next: "التالي",
+      saved: "محفوظ",
+      search_results: "النتائج",
+    },
+  };
+
+  const PRAYERS = [
+    { key:"Fajr",    ar:"الفجر",    nameKey:"fajr" },
+    { key:"Dhuhr",   ar:"الظهر",    nameKey:"dhuhr" },
+    { key:"Asr",     ar:"العصر",    nameKey:"asr" },
+    { key:"Maghrib", ar:"المغرب",   nameKey:"maghrib" },
+    { key:"Isha",    ar:"العشاء",   nameKey:"isha" },
+  ];
+
+  const METHODS = [
+    { id: 2,  code:"ISNA",        title:"ISNA" },
+    { id: 3,  code:"MWL",         title:"MWL" },
+    { id: 4,  code:"UMM_AL_QURA", title:"Umm al-Qura" },
+    { id: 5,  code:"EGYPT",       title:"Egypt" },
+    { id: 15, code:"MOONSIGHTING",title:"Moonsighting" },
+  ];
+
+  // ---------------------------
+  // storage helpers
+  // ---------------------------
+  const S = {
+    get lang(){ return localStorage.getItem("pt_lang") || "ru"; },
+    set lang(v){ localStorage.setItem("pt_lang", v); },
+    get method(){ return localStorage.getItem("pt_method") || "UMM_AL_QURA"; },
+    set method(v){ localStorage.setItem("pt_method", v); },
+    get city(){ // {name, display, lat, lon}
+      try { return JSON.parse(localStorage.getItem("pt_city") || "null"); } catch(_) { return null; }
+    },
+    set city(v){ localStorage.setItem("pt_city", JSON.stringify(v)); },
+    get savedCities(){
+      try { return JSON.parse(localStorage.getItem("pt_saved") || "[]"); } catch(_) { return []; }
+    },
+    set savedCities(v){ localStorage.setItem("pt_saved", JSON.stringify(v)); }
+  };
+
+  // ---------------------------
+  // DOM
+  // ---------------------------
+  const cityPill   = document.getElementById("cityPill");
+  const cityTitle  = document.getElementById("cityTitle");
+  const citySub    = document.getElementById("citySub");
+
+  const untilLabel = document.getElementById("untilLabel");
+  const remainText = document.getElementById("remainText");
+  const nextText   = document.getElementById("nextText");
+
+  const methodRow  = document.getElementById("methodRow");
+  const prayerList = document.getElementById("prayerList");
+
+  const statusText = document.getElementById("statusText");
+  const btnRefresh = document.getElementById("btnRefresh");
+  const btnUseGeo  = document.getElementById("btnUseGeo");
+
+  // modal
+  const modalOverlay = document.getElementById("modalOverlay");
+  const modalTitle   = document.getElementById("modalTitle");
+  const modalSub     = document.getElementById("modalSub");
+  const modalHint    = document.getElementById("modalHint");
+  const modalClose   = document.getElementById("modalClose");
+  const cityInput    = document.getElementById("cityInput");
+  const resultsEl    = document.getElementById("results");
+  const btnClearSaved= document.getElementById("btnClearSaved");
+  const btnGeoInModal= document.getElementById("btnGeoInModal");
+
+  const langRu = document.getElementById("langRu");
+  const langEn = document.getElementById("langEn");
+  const langAr = document.getElementById("langAr");
+
+  // ---------------------------
+  // state
+  // ---------------------------
+  let lang = S.lang;
+  let method = S.method;
+  let city = S.city; // {name, display, lat, lon}
+  let timings = null; // {Fajr:"HH:MM", ...}
+  let timerTick = null;
+
+  // ---------------------------
+  // UI helpers
+  // ---------------------------
+  function t(key, ...args){
+    const d = i18n[lang] || i18n.ru;
+    const v = d[key];
+    return typeof v === "function" ? v(...args) : (v ?? key);
+  }
+
+  function setDirByLang(){
+    document.documentElement.lang = lang;
+    document.documentElement.dir = (lang === "ar") ? "rtl" : "ltr";
+  }
+
+  function setLangButtons(){
+    langRu.classList.toggle("active", lang==="ru");
+    langEn.classList.toggle("active", lang==="en");
+    langAr.classList.toggle("active", lang==="ar");
+  }
+
+  function fmt2(n){ return String(n).padStart(2,"0"); }
+
+  function parseHHMM(hhmm){
+    const [h,m] = hhmm.split(":").map(x => parseInt(x,10));
+    return {h, m};
+  }
+
+  function msUntilNextPrayer(now, list){
+    // list: [{key, at: Date, name, ar}]
+    const future = list.find(x => x.at.getTime() > now.getTime());
+    if (future) return { next: future, ms: future.at.getTime() - now.getTime() };
+
+    // wrap to tomorrow's first prayer
+    const first = list[0];
+    const tomorrow = new Date(first.at.getTime());
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return { next: {...first, at: tomorrow}, ms: tomorrow.getTime() - now.getTime() };
+  }
+
+  function buildPrayerItems(){
+    if (!timings) return [];
+    const today = new Date();
+    const base = PRAYERS.map(p => {
+      const v = timings[p.key];
+      const {h,m} = parseHHMM(v);
+      const at = new Date(today.getFullYear(), today.getMonth(), today.getDate(), h, m, 0, 0);
+      const name = t(p.nameKey);
+      return { key:p.key, name, ar:p.ar, time:v, at };
+    });
+    // ensure sorted by time
+    base.sort((a,b) => a.at - b.at);
+    return base;
+  }
+
+  function renderMethods(){
+    methodRow.innerHTML = "";
+    METHODS.forEach(m => {
+      const b = document.createElement("button");
+      b.className = "chip" + (m.code === method ? " active" : "");
+      b.textContent = m.title;
+      b.onclick = async () => {
+        method = m.code;
+        S.method = method;
+        renderMethods();
+        await refreshTimings();
+      };
+      methodRow.appendChild(b);
+    });
+  }
+
+  function renderPrayers(){
+    prayerList.innerHTML = "";
+    if (!timings) return;
+
+    const items = buildPrayerItems();
+    const now = new Date();
+    const { next } = msUntilNextPrayer(now, items);
+
+    items.forEach(p => {
+      const row = document.createElement("div");
+      row.className = "prayer" + (p.key === next.key ? " next" : "");
+      row.innerHTML = `
+        <div class="dot"></div>
+        <div class="names">
+          <div class="n1">${escapeHtml(p.name)}</div>
+          <div class="n2">${escapeHtml(p.ar)}</div>
+        </div>
+        <div class="ptime">${escapeHtml(p.time)}</div>
+      `;
+      prayerList.appendChild(row);
+    });
+  }
+
+  function renderTimer(){
+    if (!timings) {
+      remainText.textContent = "--:--:--";
+      nextText.textContent = "—";
+      return;
+    }
+
+    const items = buildPrayerItems();
+    const now = new Date();
+    const { next, ms } = msUntilNextPrayer(now, items);
+
+    const totalSec = Math.max(0, Math.floor(ms/1000));
+    const hh = Math.floor(totalSec/3600);
+    const mm = Math.floor((totalSec%3600)/60);
+    const ss = totalSec%60;
+
+    untilLabel.textContent = t("until_next");
+    remainText.textContent = `${fmt2(hh)}:${fmt2(mm)}:${fmt2(ss)}`;
+    nextText.textContent = t("until_fmt", next.name);
+
+    // highlight list if needed
+    const cards = prayerList.querySelectorAll(".prayer");
+    cards.forEach(el => el.classList.remove("next"));
+    const idx = items.findIndex(x => x.key === next.key);
+    if (idx >= 0 && cards[idx]) cards[idx].classList.add("next");
+  }
+
+  function setStatus(text){
+    statusText.textContent = text;
+  }
+
+  function renderCityPill(){
+    if (!city) {
+      cityTitle.textContent = t("city_detecting");
+      citySub.textContent = "—";
+      return;
+    }
+    cityTitle.textContent = city.name || city.display || "—";
+    citySub.textContent = city.display || "";
+  }
+
+  function escapeHtml(s){
+    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  // ---------------------------
+  // City search (Nominatim)
+  // ---------------------------
+  let searchAbort = null;
+  async function nominatimSearch(q){
+    if (!q || q.trim().length < 2) return [];
+    if (searchAbort) searchAbort.abort();
+    searchAbort = new AbortController();
+
+    const url = "https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&q=" + encodeURIComponent(q.trim());
+    const res = await fetch(url, {
+      signal: searchAbort.signal,
+      headers: {
+        // Nominatim prefers a descriptive UA; browsers restrict UA header.
+        // Keep it simple; Telegram WebView usually works fine.
+        "Accept": "application/json"
       }
-    };
+    });
+    if (!res.ok) throw new Error("geocode failed");
+    const arr = await res.json();
 
-    // -----------------------
-    // Helpers
-    // -----------------------
-    const $ = (id) => document.getElementById(id);
+    return arr.map(x => {
+      const lat = parseFloat(x.lat);
+      const lon = parseFloat(x.lon);
+      const display = x.display_name || "";
+      // pick a short name
+      const cityName =
+        x.address?.city || x.address?.town || x.address?.village || x.address?.municipality ||
+        (display.split(",")[0] || "").trim();
 
-    function pad2(n){ return String(n).padStart(2,"0"); }
-    function parseHHMM(s){
-      if (!s) return null;
-      const m = String(s).match(/(\d{1,2}):(\d{2})/);
-      if (!m) return null;
-      return { h: Number(m[1]), m: Number(m[2]) };
-    }
-    function toDateToday(h, m){
-      const d = new Date();
-      d.setHours(h, m, 0, 0);
-      return d;
-    }
-    function formatHHMM(d){
-      return pad2(d.getHours()) + ":" + pad2(d.getMinutes());
-    }
-    function haptic(type="light"){
-      try{
-        const tg = window.Telegram?.WebApp;
-        tg?.HapticFeedback?.impactOccurred?.(type);
-      }catch(_){}
-    }
-    function safeLower(s){ return (s||"").toString().trim().toLowerCase(); }
-
-    // -----------------------
-    // Storage
-    // -----------------------
-    const LS = {
-      prefs: "ptb_prefs_v2",
-      cache: "ptb_cache_v2",
-      favs:  "ptb_favs_v2",
-      lang:  "ptb_lang_v2"
-    };
-
-    function saveJson(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
-    function loadJson(key){
-      try{ return JSON.parse(localStorage.getItem(key) || "null"); }catch(_){ return null; }
-    }
-
-    // -----------------------
-    // Prayer model
-    // -----------------------
-    const PRAYERS = [
-      { key:"Fajr",    en:"Fajr",    ar:"الفجر"   },
-      { key:"Dhuhr",   en:"Dhuhr",   ar:"الظهر"   },
-      { key:"Asr",     en:"Asr",     ar:"العصر"   },
-      { key:"Maghrib", en:"Maghrib", ar:"المغرب"  },
-      { key:"Isha",    en:"Isha",    ar:"العشاء"  }
-    ];
-
-    // -----------------------
-    // Countries + Cities (built-in popular)
-    // You can extend this list anytime.
-    // -----------------------
-    const COUNTRY_DATA = [
-      {
-        key: "Germany",
-        labels: { ru:"Германия", en:"Germany", ar:"ألمانيا" },
-        cities: ["Berlin","Hamburg","Munich","Cologne","Frankfurt","Stuttgart","Dusseldorf","Dortmund","Essen","Leipzig","Bremen","Dresden","Hanover","Nuremberg","Duisburg","Bochum","Wuppertal","Bielefeld","Bonn","Mannheim"]
-      },
-      {
-        key: "United Arab Emirates",
-        labels: { ru:"ОАЭ", en:"United Arab Emirates", ar:"الإمارات" },
-        cities: ["Dubai","Abu Dhabi","Sharjah","Ajman","Ras Al Khaimah","Fujairah","Umm Al Quwain","Al Ain"]
-      },
-      {
-        key: "Kazakhstan",
-        labels: { ru:"Казахстан", en:"Kazakhstan", ar:"كازاخستان" },
-        cities: ["Almaty","Astana","Shymkent","Aktobe","Karaganda","Taraz","Pavlodar","Ust-Kamenogorsk","Semey","Atyrau","Kostanay","Kyzylorda","Uralsk"]
-      },
-      {
-        key: "Russia",
-        labels: { ru:"Россия", en:"Russia", ar:"روسيا" },
-        cities: ["Moscow","Saint Petersburg","Kazan","Makhachkala","Grozny","Ufa","Yekaterinburg","Novosibirsk","Samara","Rostov-on-Don"]
-      },
-      {
-        key: "Turkey",
-        labels: { ru:"Турция", en:"Turkey", ar:"تركيا" },
-        cities: ["Istanbul","Ankara","Izmir","Bursa","Antalya","Konya","Adana","Gaziantep","Kayseri","Mersin"]
-      },
-      {
-        key: "Indonesia",
-        labels: { ru:"Индонезия", en:"Indonesia", ar:"إندونيسيا" },
-        cities: ["Jakarta","Surabaya","Bandung","Medan","Semarang","Makassar","Palembang","Depok","Tangerang","Bekasi"]
-      },
-      {
-        key: "France",
-        labels: { ru:"Франция", en:"France", ar:"فرنسا" },
-        cities: ["Paris","Marseille","Lyon","Toulouse","Nice","Nantes","Strasbourg","Montpellier","Bordeaux","Lille"]
-      },
-      {
-        key: "Tajikistan",
-        labels: { ru:"Таджикистан", en:"Tajikistan", ar:"طاجيكستان" },
-        cities: ["Dushanbe","Khujand","Kulob","Bokhtar"]
-      },
-      {
-        key: "Uzbekistan",
-        labels: { ru:"Узбекистан", en:"Uzbekistan", ar:"أوزبكستان" },
-        cities: ["Tashkent","Samarkand","Bukhara","Namangan","Andijan","Fergana","Nukus"]
-      },
-      {
-        key: "Saudi Arabia",
-        labels: { ru:"Саудовская Аравия", en:"Saudi Arabia", ar:"السعودية" },
-        cities: ["Mecca","Medina","Riyadh","Jeddah","Dammam","Taif","Tabuk","Abha"]
-      },
-      {
-        key: "Egypt",
-        labels: { ru:"Египет", en:"Egypt", ar:"مصر" },
-        cities: ["Cairo","Alexandria","Giza","Port Said","Suez","Mansoura","Tanta","Aswan","Luxor"]
-      }
-    ];
-
-    // -----------------------
-    // UI refs
-    // -----------------------
-    const ui = {
-      country: $("country"),
-      city: $("city"),
-      method: $("method"),
-      refresh: $("btnRefresh"),
-      subtitle: $("subtitle"),
-      foot: $("foot"),
-      status: $("status"),
-      list: $("list"),
-      dropdown: $("cityDropdown"),
-      favChips: $("favChips"),
-
-      // labels / text nodes
-      lblCountry: $("lblCountry"),
-      lblCity: $("lblCity"),
-      lblMethod: $("lblMethod"),
-      hint: $("hint"),
-      untilLabel: $("untilLabel"),
-      nextInfo: $("nextInfo"),
-      todayTitle: $("todayTitle"),
-      btnSaveCity: $("btnSaveCity"),
-      btnClearFavs: $("btnClearFavs"),
-
-      // language buttons
-      langRU: $("langRU"),
-      langEN: $("langEN"),
-      langAR: $("langAR")
-    };
-
-    // -----------------------
-    // Language state
-    // -----------------------
-    let LANG = "ru";
-    function t(){ return I18N[LANG] || I18N.ru; }
-
-    function setLang(lang){
-      LANG = (lang === "en" || lang === "ar") ? lang : "ru";
-      saveJson(LS.lang, LANG);
-
-      ui.langRU.classList.toggle("active", LANG==="ru");
-      ui.langEN.classList.toggle("active", LANG==="en");
-      ui.langAR.classList.toggle("active", LANG==="ar");
-
-      // set dir for Arabic
-      document.documentElement.lang = LANG;
-      document.documentElement.dir = (LANG==="ar") ? "rtl" : "ltr";
-
-      // update UI strings
-      ui.subtitle.textContent = t().subtitleEmpty;
-      ui.refresh.textContent = t().refresh;
-      ui.lblCountry.textContent = t().country;
-      ui.lblCity.textContent = t().city;
-      ui.lblMethod.textContent = t().method;
-      ui.btnSaveCity.textContent = t().saveFav;
-      ui.btnClearFavs.textContent = t().clearFavs;
-      ui.hint.textContent = t().hint;
-      ui.untilLabel.textContent = t().untilNext;
-      ui.todayTitle.textContent = t().today;
-      ui.city.placeholder = t().placeholderCity;
-
-      rebuildCountryOptions(); // language labels for countries
-      renderFavs();
-      // also update next label if shown
-      updateNextLabelFromState();
-    }
-
-    // -----------------------
-    // Prefs & Fav state
-    // -----------------------
-    function readUI(){
+      const country = x.address?.country || "";
+      const short = [cityName, country].filter(Boolean).join(", ");
       return {
-        country: ui.country.value.trim(),
-        city: ui.city.value.trim(),
-        method: Number(ui.method.value),
-        lang: LANG
+        name: short || cityName || display.split(",")[0],
+        display,
+        lat, lon
       };
-    }
+    });
+  }
 
-    function applyPrefsToUI(p){
-      if (!p) return;
-      if (p.country) ui.country.value = p.country;
-      if (p.city) ui.city.value = p.city;
-      if (p.method) ui.method.value = String(p.method);
-    }
+  function openModal(){
+    modalTitle.textContent = t("city_pick");
+    modalSub.textContent = t("city_pick_sub");
+    modalHint.textContent = t("city_pick_hint");
+    btnClearSaved.textContent = "🗑 " + t("clear_saved");
+    btnGeoInModal.textContent = "📡 " + t("use_geo");
 
-    function setStatus(text, kind){
-      ui.status.textContent = text;
-      ui.status.className = "status" + (kind ? (" " + kind) : "");
-    }
+    cityInput.value = "";
+    resultsEl.innerHTML = "";
+    renderSavedCitiesIntoResults();
+    modalOverlay.classList.add("show");
 
-    function getFavs(){
-      const favs = loadJson(LS.favs);
-      return Array.isArray(favs) ? favs : [];
-    }
-    function setFavs(list){
-      saveJson(LS.favs, list);
-    }
+    setTimeout(() => cityInput.focus(), 50);
+    try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch(_) {}
+  }
 
-    function normalizeFav(item){
-      return {
-        country: (item.country||"").trim(),
-        city: (item.city||"").trim()
+  function closeModal(){
+    modalOverlay.classList.remove("show");
+  }
+
+  function renderSavedCitiesIntoResults(){
+    const saved = S.savedCities;
+    if (!saved.length) return;
+
+    const sep = document.createElement("div");
+    sep.className = "hint";
+    sep.style.margin = "6px 2px 2px 2px";
+    sep.textContent = t("saved");
+    resultsEl.appendChild(sep);
+
+    saved.slice(0, 8).forEach(item => {
+      const el = document.createElement("div");
+      el.className = "item saved";
+      el.innerHTML = `<div class="t1">${escapeHtml(item.name)}</div><div class="t2">${escapeHtml(item.display || "")}</div>`;
+      el.onclick = async () => {
+        await pickCity(item, true);
+        closeModal();
       };
-    }
+      resultsEl.appendChild(el);
+    });
+  }
 
-    function favKey(item){
-      return safeLower(item.city) + "||" + safeLower(item.country);
-    }
+  function renderSearchResults(list){
+    // clear all and show saved first + new results
+    resultsEl.innerHTML = "";
+    renderSavedCitiesIntoResults();
 
-    function isFav(prefs){
-      const key = favKey(prefs);
-      return getFavs().some(f => favKey(f) === key);
-    }
+    const sep = document.createElement("div");
+    sep.className = "hint";
+    sep.style.margin = "10px 2px 2px 2px";
+    sep.textContent = t("search_results");
+    resultsEl.appendChild(sep);
 
-    function addFav(prefs){
-      const item = normalizeFav(prefs);
-      if (!item.city || !item.country) return { ok:false, msg:"" };
-      const favs = getFavs();
+    list.forEach(item => {
+      const el = document.createElement("div");
+      el.className = "item";
+      el.innerHTML = `<div class="t1">${escapeHtml(item.name)}</div><div class="t2">${escapeHtml(item.display || "")}</div>`;
+      el.onclick = async () => {
+        await pickCity(item, true);
+        closeModal();
+      };
+      resultsEl.appendChild(el);
+    });
+  }
 
-      if (favs.some(f => favKey(f) === favKey(item))){
-        return { ok:false, msg:t().alreadyFav };
+  async function pickCity(item, saveToSaved){
+    city = item;
+    S.city = city;
+    renderCityPill();
+
+    if (saveToSaved) {
+      const saved = S.savedCities;
+      const key = `${item.lat.toFixed(5)},${item.lon.toFixed(5)}`;
+      const exists = saved.some(x => (x._k || `${x.lat.toFixed(5)},${x.lon.toFixed(5)}`) === key);
+      if (!exists) {
+        saved.unshift({...item, _k:key});
+        S.savedCities = saved.slice(0, 12);
       }
-
-      favs.unshift(item);
-      // limit size
-      const trimmed = favs.slice(0, 12);
-      setFavs(trimmed);
-      return { ok:true, msg:t().addedFav };
     }
 
-    function removeFav(item){
-      const key = favKey(item);
-      const favs = getFavs().filter(f => favKey(f) !== key);
-      setFavs(favs);
-      setStatus(t().removedFav, "ok");
-      haptic("light");
-      renderFavs();
-    }
+    await refreshTimings();
+    try { tg?.HapticFeedback?.notificationOccurred?.("success"); } catch(_) {}
+  }
 
-    function clearFavs(){
-      setFavs([]);
-      renderFavs();
-    }
-
-    // -----------------------
-    // Country & Autocomplete
-    // -----------------------
-    function rebuildCountryOptions(){
-      const cur = ui.country.value || "Germany";
-      ui.country.innerHTML = "";
-      for (const c of COUNTRY_DATA){
-        const opt = document.createElement("option");
-        opt.value = c.key;
-        opt.textContent = (c.labels?.[LANG] || c.labels?.en || c.key);
-        ui.country.appendChild(opt);
-      }
-      ui.country.value = cur && COUNTRY_DATA.some(x=>x.key===cur) ? cur : "Germany";
-    }
-
-    function getCountryObj(countryKey){
-      return COUNTRY_DATA.find(c => c.key === countryKey) || COUNTRY_DATA[0];
-    }
-
-    function currentCityList(){
-      const c = getCountryObj(ui.country.value);
-      return (c?.cities || []);
-    }
-
-    function buildSuggestions(query){
-      const q = safeLower(query);
-      const countryKey = ui.country.value;
-      const cObj = getCountryObj(countryKey);
-
-      // 1) search inside selected country list
-      const local = (cObj?.cities || [])
-        .filter(name => safeLower(name).includes(q))
-        .slice(0, 8)
-        .map(name => ({ city:name, country:countryKey, scope:"local" }));
-
-      // 2) also search in favorites (any country)
-      const favs = getFavs()
-        .filter(f => safeLower(f.city).includes(q))
-        .slice(0, 6)
-        .map(f => ({ city:f.city, country:f.country, scope:"fav" }));
-
-      // 3) mix, unique by city+country
-      const out = [];
-      const seen = new Set();
-      for (const a of [...favs, ...local]){
-        const k = favKey(a);
-        if (seen.has(k)) continue;
-        seen.add(k);
-        out.push(a);
-      }
-      return out.slice(0, 10);
-    }
-
-    function openDropdown(items){
-      ui.dropdown.innerHTML = "";
-      if (!items.length){
-        ui.dropdown.classList.remove("open");
-        return;
-      }
-
-      items.forEach((it, idx) => {
-        const div = document.createElement("div");
-        div.className = "dropItem";
-        div.innerHTML = `
-          <div class="dropLeft">
-            <div class="dropTitle">${it.city}</div>
-            <div class="dropSub">${it.country}</div>
-          </div>
-          <div class="kbd">${idx===0 ? "↵" : ""}</div>
-        `;
-        div.addEventListener("click", () => pickSuggestion(it));
-        ui.dropdown.appendChild(div);
+  // ---------------------------
+  // Geolocation
+  // ---------------------------
+  async function useGeolocation(){
+    setStatus(t("status_loading"));
+    try {
+      const pos = await new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error("no geolocation"));
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          timeout: 9000,
+          maximumAge: 120000
+        });
       });
 
-      ui.dropdown.classList.add("open");
-    }
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
 
-    function closeDropdown(){
-      ui.dropdown.classList.remove("open");
-    }
+      // reverse via Nominatim
+      const url = "https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&addressdetails=1&lat=" +
+        encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lon);
 
-    function pickSuggestion(it){
-      ui.country.value = it.country;
-      ui.city.value = it.city;
-      closeDropdown();
-      scheduleRefresh(0);
-      haptic("light");
-    }
+      const res = await fetch(url, { headers: { "Accept": "application/json" } });
+      const data = await res.json();
 
-    // keyboard: Enter picks first suggestion
-    function pickFirstSuggestionIfOpen(){
-      if (!ui.dropdown.classList.contains("open")) return false;
-      const first = ui.dropdown.querySelector(".dropItem");
-      if (!first) return false;
-      first.click();
-      return true;
-    }
+      const cityName =
+        data.address?.city || data.address?.town || data.address?.village || data.address?.municipality ||
+        (data.display_name?.split(",")[0] || "").trim();
 
-    // -----------------------
-    // Prayer list + countdown
-    // -----------------------
-    function buildList(prayerTimes){
-      ui.list.innerHTML = "";
-
-      const now = new Date();
-      const items = PRAYERS.map(p => {
-        const v = prayerTimes?.[p.key];
-        const hm = parseHHMM(v);
-        const dt = hm ? toDateToday(hm.h, hm.m) : null;
-        return { ...p, dt };
-      }).filter(x => x.dt);
-
-      items.sort((a,b) => a.dt - b.dt);
-
-      const next = items.find(x => x.dt > now) || items[0] || null;
-
-      for (const it of items){
-        const div = document.createElement("div");
-        div.className = "item" + (next && it.key === next.key ? " next" : "");
-
-        // prayer name locale: english name always + arabic below (like your app)
-        div.innerHTML = `
-          <div class="pname">
-            <div class="en">${it.en}</div>
-            <div class="ar">${it.ar}</div>
-          </div>
-          <div class="ptime">${formatHHMM(it.dt)}</div>
-        `;
-        ui.list.appendChild(div);
-      }
-
-      return next;
-    }
-
-    function computeRemaining(nextDt){
-      const now = new Date();
-      let diff = nextDt - now;
-      if (diff <= 0){
-        const t2 = new Date(nextDt.getTime());
-        t2.setDate(t2.getDate() + 1);
-        diff = t2 - now;
-      }
-      const s = Math.floor(diff / 1000);
-      const hh = Math.floor(s / 3600);
-      const mm = Math.floor((s % 3600) / 60);
-      const ss = s % 60;
-      return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
-    }
-
-    let tickTimer = null;
-    let lastNext = null;
-
-    function updateNextLabelFromState(){
-      if (!lastNext || !lastNext.dt){
-        ui.nextInfo.textContent = t().nextNone;
-        return;
-      }
-      ui.nextInfo.textContent = t().nextFmt(lastNext.en, formatHHMM(lastNext.dt));
-    }
-
-    function startCountdown(next){
-      lastNext = next;
-
-      if (tickTimer) clearInterval(tickTimer);
-
-      const cd = $("countdown");
-      if (!next || !next.dt){
-        cd.textContent = "--:--:--";
-        ui.nextInfo.textContent = t().nextNone;
-        return;
-      }
-
-      function render(){
-        cd.textContent = computeRemaining(next.dt);
-        updateNextLabelFromState();
-      }
-
-      render();
-      tickTimer = setInterval(render, 1000);
-    }
-
-    // -----------------------
-    // API: AlAdhan timingsByCity
-    // -----------------------
-    async function fetchWithTimeout(url, ms=12000){
-      const ctrl = new AbortController();
-      const tt = setTimeout(() => ctrl.abort(), ms);
-      try{
-        return await fetch(url, { signal: ctrl.signal });
-      } finally {
-        clearTimeout(tt);
-      }
-    }
-
-    async function loadTimings(city, country, methodId){
-      const u = new URL("https://api.aladhan.com/v1/timingsByCity");
-      u.searchParams.set("city", city);
-      u.searchParams.set("country", country);
-      u.searchParams.set("method", String(methodId));
-
-      const resp = await fetchWithTimeout(u.toString(), 12000);
-      if (!resp.ok) throw new Error("HTTP " + resp.status);
-
-      const json = await resp.json();
-      if (!json || json.code !== 200) throw new Error("Bad response");
-
-      const timings = json?.data?.timings;
-      if (!timings) throw new Error("No timings");
-
-      const out = {};
-      for (const p of PRAYERS){
-        out[p.key] = timings[p.key];
-      }
-
-      const meta = {
-        dateReadable: json?.data?.date?.readable || "",
-        timezone: json?.data?.meta?.timezone || ""
+      const country = data.address?.country || "";
+      const short = [cityName, country].filter(Boolean).join(", ");
+      const picked = {
+        name: short || cityName || "—",
+        display: data.display_name || short || "",
+        lat: parseFloat(lat),
+        lon: parseFloat(lon)
       };
 
-      return { timings: out, meta };
+      await pickCity(picked, true);
+      setStatus(t("status_ok"));
+    } catch (e) {
+      console.error(e);
+      setStatus(t("status_err"));
+      try { tg?.HapticFeedback?.notificationOccurred?.("error"); } catch(_) {}
     }
+  }
 
-    function setFooter(meta, prefs){
-      const parts = [];
-      if (prefs?.city) parts.push(`${prefs.city}, ${prefs.country}`);
-      if (meta?.dateReadable) parts.push(meta.dateReadable);
-      if (meta?.timezone) parts.push(meta.timezone);
-      ui.foot.textContent = parts.length ? parts.join(" • ") : "—";
+  // ---------------------------
+  // Aladhan timings API
+  // ---------------------------
+  function methodIdFromCode(code){
+    return (METHODS.find(m => m.code === code)?.id) ?? 4;
+  }
+
+  async function fetchTimings(lat, lon){
+    const id = methodIdFromCode(method);
+    const url = `https://api.aladhan.com/v1/timings?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&method=${id}`;
+    const res = await fetch(url, { headers: { "Accept":"application/json" } });
+    if (!res.ok) throw new Error("aladhan http " + res.status);
+    const json = await res.json();
+    const tim = json?.data?.timings;
+    if (!tim) throw new Error("no timings");
+
+    // normalize HH:mm
+    const out = {};
+    PRAYERS.forEach(p => {
+      const raw = String(tim[p.key] || "").slice(0,5);
+      out[p.key] = raw.includes(":") ? raw : "00:00";
+    });
+    return out;
+  }
+
+  async function refreshTimings(){
+    if (!city) return;
+
+    setStatus(t("status_loading"));
+    try {
+      timings = await fetchTimings(city.lat, city.lon);
+      renderPrayers();
+      renderTimer();
+
+      // start/refresh ticker
+      if (timerTick) clearInterval(timerTick);
+      timerTick = setInterval(renderTimer, 1000);
+
+      setStatus(t("status_ok"));
+    } catch (e) {
+      console.error(e);
+      setStatus(t("status_err"));
     }
+  }
 
-    // -----------------------
-    // Refresh logic
-    // -----------------------
-    async function refresh(){
-      const prefs = readUI();
-      if (!prefs.city){
-        setStatus(t().statusNeedCity, "err");
-        haptic("light");
+  // ---------------------------
+  // Language switching
+  // ---------------------------
+  async function setLang(newLang){
+    lang = newLang;
+    S.lang = lang;
+    setDirByLang();
+    setLangButtons();
+
+    // rerender labels
+    renderCityPill();
+    renderMethods();
+    renderPrayers();
+    renderTimer();
+
+    // modal texts (if open)
+    if (modalOverlay.classList.contains("show")) openModal();
+  }
+
+  // ---------------------------
+  // Events
+  // ---------------------------
+  cityPill.onclick = openModal;
+  modalClose.onclick = closeModal;
+  modalOverlay.onclick = (e) => { if (e.target === modalOverlay) closeModal(); };
+
+  btnRefresh.onclick = refreshTimings;
+  btnUseGeo.onclick = useGeolocation;
+
+  btnGeoInModal.onclick = async () => { await useGeolocation(); closeModal(); };
+  btnClearSaved.onclick = () => {
+    S.savedCities = [];
+    // keep current city, just clear saved list
+    resultsEl.innerHTML = "";
+    renderSavedCitiesIntoResults();
+    try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch(_) {}
+  };
+
+  langRu.onclick = () => setLang("ru");
+  langEn.onclick = () => setLang("en");
+  langAr.onclick = () => setLang("ar");
+
+  let searchDebounce = null;
+  cityInput.addEventListener("input", () => {
+    const q = cityInput.value.trim();
+    if (searchDebounce) clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(async () => {
+      if (q.length < 2) {
+        resultsEl.innerHTML = "";
+        renderSavedCitiesIntoResults();
         return;
       }
-
-      saveJson(LS.prefs, prefs);
-      ui.refresh.disabled = true;
-      setStatus(t().statusLoading, "");
-
-      try{
-        const { timings, meta } = await loadTimings(prefs.city, prefs.country, prefs.method);
-
-        saveJson(LS.cache, {
-          savedAt: Date.now(),
-          prefs,
-          timings,
-          meta
-        });
-
-        ui.subtitle.textContent = `${prefs.city}, ${prefs.country}`;
-        const next = buildList(timings);
-        startCountdown(next);
-        setFooter(meta, prefs);
-
-        setStatus(t().statusUpdated, "ok");
-        haptic("light");
-      }catch(err){
-        const cache = loadJson(LS.cache);
-        if (cache?.timings && cache?.prefs){
-          ui.subtitle.textContent = `${cache.prefs.city}, ${cache.prefs.country}`;
-          applyPrefsToUI(cache.prefs);
-
-          const next = buildList(cache.timings);
-          startCountdown(next);
-          setFooter(cache.meta, cache.prefs);
-
-          setStatus(t().statusFallback, "err");
-        }else{
-          ui.list.innerHTML = "";
-          startCountdown(null);
-          setFooter(null, null);
-          setStatus(t().statusError, "err");
-        }
-        haptic("light");
-      }finally{
-        ui.refresh.disabled = false;
+      try {
+        const list = await nominatimSearch(q);
+        renderSearchResults(list);
+      } catch (e) {
+        console.error(e);
+        // keep saved list if error
+        resultsEl.innerHTML = "";
+        renderSavedCitiesIntoResults();
       }
+    }, 250);
+  });
+
+  // ---------------------------
+  // Boot
+  // ---------------------------
+  function boot(){
+    setDirByLang();
+    setLangButtons();
+    renderMethods();
+
+    if (!city) {
+      cityTitle.textContent = t("city_detecting");
+      citySub.textContent = "—";
+      setStatus(t("status_loading"));
+
+      // try geolocation once at first run
+      useGeolocation().finally(() => {
+        if (!city) {
+          setStatus(t("status_err"));
+          cityTitle.textContent = t("city_detecting");
+          citySub.textContent = "Tap to choose";
+        }
+      });
+    } else {
+      renderCityPill();
+      refreshTimings();
     }
+  }
 
-    let debounce = null;
-    function scheduleRefresh(delayMs=450){
-      if (debounce) clearTimeout(debounce);
-      debounce = setTimeout(() => refresh(), delayMs);
-    }
+  boot();
 
-    // -----------------------
-    // Favorites UI
-    // -----------------------
-    function renderFavs(){
-      const favs = getFavs();
-      ui.favChips.innerHTML = "";
-
-      if (!favs.length){
-        const empty = document.createElement("div");
-        empty.className = "hint";
-        empty.style.marginTop = "10px";
-        empty.textContent = t().favEmpty;
-        ui.favChips.appendChild(empty);
-        return;
-      }
-
-      favs.forEach((f) => {
-        const chip = document.createElement("div");
-        chip.className = "chip";
-        chip.innerHTML = `
-          <div class="txt">${f.city}, ${f.country}</div>
-          <div class="x" title="Remove">✕</div>
-        `;
-
-        chip.addEventListener("click", (e) => {
-          const isX = e.target && (e.target.classList.contains("x"));
-          if (isX) return; // handled below
-          ui.country.value = f.country;
-          ui.city.value = f.city;
-          closeDropdown();
-          scheduleRefresh(0);
-          haptic("light");
-        });
-
-        chip.querySelector(".x").addEventListener("click", (e) => {
-          e.stopPropagation();
-          removeFav(f);
-        });
-
-        ui.favChips.appendChild(chip);
-      });
-    }
-
-    // -----------------------
-    // Boot
-    // -----------------------
-    (function boot(){
-      // language initial
-      const savedLang = loadJson(LS.lang);
-      if (savedLang === "en" || savedLang === "ar" || savedLang === "ru") LANG = savedLang;
-
-      // build countries options (needs LANG)
-      rebuildCountryOptions();
-
-      // defaults: use Telegram language if no saved
-      try{
-        const tgLang = (window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code || "").toLowerCase();
-        if (!savedLang){
-          if (tgLang.startsWith("ar")) LANG = "ar";
-          else if (tgLang.startsWith("en")) LANG = "en";
-          else LANG = "ru";
-        }
-      }catch(_){}
-
-      // apply language strings
-      setLang(LANG);
-
-      // restore prefs
-      const defaults = { country:"Germany", city:"Berlin", method:4, lang: LANG };
-      const p = loadJson(LS.prefs) || defaults;
-      applyPrefsToUI(p);
-
-      // render favs
-      renderFavs();
-
-      // show cache immediately (fast)
-      const cache = loadJson(LS.cache);
-      if (cache?.timings && cache?.prefs){
-        applyPrefsToUI(cache.prefs);
-        ui.subtitle.textContent = `${cache.prefs.city}, ${cache.prefs.country}`;
-        const next = buildList(cache.timings);
-        startCountdown(next);
-        setFooter(cache.meta, cache.prefs);
-        setStatus(t().statusLoading, "");
-      } else {
-        ui.subtitle.textContent = t().subtitleEmpty;
-        setStatus(t().statusReady, "");
-      }
-
-      // listeners
-      ui.refresh.addEventListener("click", refresh);
-
-      ui.country.addEventListener("change", () => {
-        // when country changes, suggestions should adapt
-        closeDropdown();
-        // if current city is empty, show suggestions immediately
-        if (ui.city.value.trim().length === 0){
-          openDropdown(currentCityList().slice(0,8).map(name => ({city:name, country:ui.country.value, scope:"local"})));
-        }
-        scheduleRefresh(450);
-      });
-
-      ui.method.addEventListener("change", () => scheduleRefresh(450));
-
-      // city input -> autocomplete
-      ui.city.addEventListener("input", () => {
-        const q = ui.city.value.trim();
-        if (!q){
-          openDropdown(currentCityList().slice(0,8).map(name => ({city:name, country:ui.country.value, scope:"local"})));
-        } else if (q.length >= 1){
-          openDropdown(buildSuggestions(q));
-        }
-        // do not refresh on every key too fast — debounce
-        scheduleRefresh(650);
-      });
-
-      ui.city.addEventListener("focus", () => {
-        const q = ui.city.value.trim();
-        if (!q){
-          openDropdown(currentCityList().slice(0,8).map(name => ({city:name, country:ui.country.value, scope:"local"})));
-        } else {
-          openDropdown(buildSuggestions(q));
-        }
-      });
-
-      ui.city.addEventListener("keydown", (e) => {
-        if (e.key === "Enter"){
-          if (pickFirstSuggestionIfOpen()){
-            e.preventDefault();
-            return;
-          }
-          // if no dropdown open, just refresh
-          refresh();
-          e.preventDefault();
-        } else if (e.key === "Escape"){
-          closeDropdown();
-        }
-      });
-
-      // click outside closes dropdown
-      document.addEventListener("click", (e) => {
-        const cityField = $("cityField");
-        if (!cityField.contains(e.target)) closeDropdown();
-      });
-
-      // favorites actions
-      ui.btnSaveCity.addEventListener("click", () => {
-        const prefs = readUI();
-        if (!prefs.city){
-          setStatus(t().statusNeedCity, "err");
-          return;
-        }
-        const r = addFav(prefs);
-        if (r.ok){
-          setStatus(r.msg, "ok");
-          haptic("light");
-          renderFavs();
-        } else {
-          setStatus(r.msg || t().alreadyFav, "err");
-          haptic("light");
-        }
-      });
-
-      ui.btnClearFavs.addEventListener("click", () => {
-        const ok = confirm(t().confirmClear);
-        if (!ok) return;
-        clearFavs();
-        setStatus(t().statusReady, "");
-        haptic("light");
-      });
-
-      // language buttons
-      ui.langRU.addEventListener("click", () => setLang("ru"));
-      ui.langEN.addEventListener("click", () => setLang("en"));
-      ui.langAR.addEventListener("click", () => setLang("ar"));
-
-      // first refresh
-      refresh();
-    })();
-  </script>
+})();
+</script>
 </body>
 </html>
