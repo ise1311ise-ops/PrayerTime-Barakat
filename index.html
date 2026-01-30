@@ -15,15 +15,12 @@
       --card:#0b0f12;
       --glass: rgba(255,255,255,.06);
       --line: rgba(255,255,255,.10);
-      --line2: rgba(255,255,255,.06);
       --txt:#ffffff;
       --muted: rgba(255,255,255,.55);
       --muted2: rgba(255,255,255,.35);
       --neon:#67E5FF;
-      --neon2: rgba(103,229,255,.22);
       --shadow: 0 10px 30px rgba(0,0,0,.45);
       --r: 22px;
-      --pad: 14px;
       --safeTop: env(safe-area-inset-top);
       --safeBot: env(safe-area-inset-bottom);
     }
@@ -38,7 +35,6 @@
       color:var(--txt);
       overflow-x:hidden;
     }
-
     body:before{
       content:"";
       position:fixed; inset:0;
@@ -80,6 +76,7 @@
       cursor:pointer;
       user-select:none;
       min-width: 0;
+      flex: 1;
     }
 
     .pill .icon{
@@ -98,7 +95,7 @@
       font-weight: 900;
       font-size: 15px;
       line-height: 1.1;
-      max-width: 220px;
+      max-width: 260px;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -295,7 +292,7 @@
       gap:10px;
     }
 
-    /* reminders card */
+    /* reminders card (BOT) */
     .remCard{
       margin-top: 12px;
       padding: 14px;
@@ -471,13 +468,12 @@
       margin-top: 12px;
     }
 
-    /* RTL tweaks for Arabic */
+    /* RTL */
     [dir="rtl"] .topbar{ flex-direction: row-reverse; }
     [dir="rtl"] .pill{ direction: rtl; }
     [dir="rtl"] .timer{ direction: rtl; }
     [dir="rtl"] .prayer{ direction: rtl; }
     [dir="rtl"] .remCard{ direction: rtl; }
-    [dir="rtl"] .names .n2{ opacity:.55; }
   </style>
 </head>
 
@@ -510,7 +506,7 @@
       </div>
     </div>
 
-    <!-- ✅ reminders -->
+    <!-- ✅ Oповещения через БОТА -->
     <div class="remCard" id="remCard">
       <div class="remTop">
         <div>
@@ -522,16 +518,15 @@
         </div>
       </div>
       <div class="remBtns">
-        <button class="btn primary" id="remEnableBtn">—</button>
-        <button class="btn" id="remTestBtn">—</button>
+        <button class="btn primary" id="openBotBtn">—</button>
+        <button class="btn" id="syncBotBtn">—</button>
       </div>
     </div>
 
     <div class="row" id="methodRow"></div>
-
     <div class="list" id="prayerList"></div>
 
-    <!-- ✅ низ: только статус, без кнопок -->
+    <!-- ✅ низ: без кнопок "обновить/спутник" -->
     <div class="footer">
       <div id="statusText">—</div>
       <div id="noteText"></div>
@@ -564,9 +559,15 @@
 
 <script>
 (() => {
-  // ---------------------------
+  // ============================================================
+  // ✅ НАСТРОЙКИ (ОБЯЗАТЕЛЬНО ПОМЕНЯЙ)
+  // ============================================================
+  const API_BASE = "https://YOUR-DOMAIN.com"; // например: https://prayertimes-barakat.onrender.com
+  const BOT_USERNAME = "YOUR_BOT_USERNAME";   // без @, например: PrayerTimeBarakat_bot
+
+  // ============================================================
   // Telegram init (safe)
-  // ---------------------------
+  // ============================================================
   const tg = window.Telegram?.WebApp;
   try {
     tg?.ready?.();
@@ -575,12 +576,13 @@
     tg?.setBackgroundColor?.('#06080b');
   } catch(_) {}
 
-  // ---------------------------
+  // ============================================================
   // i18n
-  // ---------------------------
+  // ============================================================
   const i18n = {
     ru: {
       city_detecting: "Определяем город…",
+      city_tap_choose: "Нажмите, чтобы выбрать город",
       city_pick: "Выбор города",
       city_pick_sub: "Страна и город — с подсказками",
       city_pick_hint: "Начните вводить: “Berlin”, “Dubai”, “Москва”… Выберите подсказку. Можно сохранить несколько городов.",
@@ -591,27 +593,29 @@
       status_ok: "Обновлено",
       status_loading: "Загрузка…",
       status_err: "Не удалось обновить",
+
       fajr: "Фаджр",
       dhuhr: "Зухр",
       asr: "Аср",
       maghrib: "Магриб",
       isha: "Иша",
+
       saved: "Сохранённые",
       search_results: "Результаты",
 
-      // reminders
-      rem_title: "Оповещения за 15 минут",
-      rem_sub: "Работает, пока мини-приложение открыто. Если браузер/Telegram разрешит уведомления — покажем системное, иначе покажем всплывающее окно.",
-      rem_enable: "Разрешить уведомления",
-      rem_test: "Тест",
-      rem_note_on: "Оповещения: включены",
-      rem_note_off: "Оповещения: выключены",
-      rem_popup_title: "Скоро намаз",
-      rem_popup_msg: (name, at) => `${name} через 15 минут • ${at}`,
-      rem_perm_denied: "Разрешение на уведомления не выдано",
+      rem_title: "Оповещения через бота (за 15 минут)",
+      rem_sub: "Чтобы бот мог писать — откройте бота и нажмите Start один раз.",
+      rem_on: "Оповещения: включены",
+      rem_off: "Оповещения: выключены",
+      open_bot: "Открыть бота",
+      sync_bot: "Синхронизировать",
+      sync_ok: "Настройки отправлены боту ✅",
+      sync_need_city: "Сначала выберите город",
+      sync_fail: "Не удалось синхронизировать",
     },
     en: {
       city_detecting: "Detecting city…",
+      city_tap_choose: "Tap to choose city",
       city_pick: "Choose city",
       city_pick_sub: "Country & city with suggestions",
       city_pick_hint: "Start typing: “Berlin”, “Dubai”, “Moscow”… Pick a suggestion. You can save multiple cities.",
@@ -622,27 +626,29 @@
       status_ok: "Updated",
       status_loading: "Loading…",
       status_err: "Update failed",
+
       fajr: "Fajr",
       dhuhr: "Dhuhr",
       asr: "Asr",
       maghrib: "Maghrib",
       isha: "Isha",
+
       saved: "Saved",
       search_results: "Results",
 
-      // reminders
-      rem_title: "Reminders 15 minutes before",
-      rem_sub: "Works while the mini app is open. If notifications are allowed, we show a system notification; otherwise we show an in-app popup.",
-      rem_enable: "Allow notifications",
-      rem_test: "Test",
-      rem_note_on: "Reminders: ON",
-      rem_note_off: "Reminders: OFF",
-      rem_popup_title: "Prayer soon",
-      rem_popup_msg: (name, at) => `${name} in 15 minutes • ${at}`,
-      rem_perm_denied: "Notification permission not granted",
+      rem_title: "Bot reminders (15 minutes before)",
+      rem_sub: "To receive messages, open the bot and press Start once.",
+      rem_on: "Reminders: ON",
+      rem_off: "Reminders: OFF",
+      open_bot: "Open bot",
+      sync_bot: "Sync",
+      sync_ok: "Settings sent to the bot ✅",
+      sync_need_city: "Choose a city first",
+      sync_fail: "Sync failed",
     },
     ar: {
       city_detecting: "جارٍ تحديد المدينة…",
+      city_tap_choose: "اضغط لاختيار المدينة",
       city_pick: "اختيار المدينة",
       city_pick_sub: "الدولة والمدينة مع اقتراحات",
       city_pick_hint: "ابدأ الكتابة: “Berlin”, “Dubai”… اختر من الاقتراحات. يمكنك حفظ عدة مدن.",
@@ -653,24 +659,25 @@
       status_ok: "تم التحديث",
       status_loading: "جارٍ التحميل…",
       status_err: "فشل التحديث",
+
       fajr: "الفجر",
       dhuhr: "الظهر",
       asr: "العصر",
       maghrib: "المغرب",
       isha: "العشاء",
+
       saved: "محفوظ",
       search_results: "النتائج",
 
-      // reminders
-      rem_title: "تنبيهات قبل 15 دقيقة",
-      rem_sub: "تعمل أثناء فتح التطبيق المصغّر. إذا سُمِح بالإشعارات سنعرض إشعار النظام، وإلا سنعرض نافذة داخل التطبيق.",
-      rem_enable: "السماح بالإشعارات",
-      rem_test: "اختبار",
-      rem_note_on: "التنبيهات: مفعّلة",
-      rem_note_off: "التنبيهات: متوقفة",
-      rem_popup_title: "الصلاة قريبًا",
-      rem_popup_msg: (name, at) => `${name} بعد 15 دقيقة • ${at}`,
-      rem_perm_denied: "لم يتم منح إذن الإشعارات",
+      rem_title: "تنبيهات عبر البوت (قبل 15 دقيقة)",
+      rem_sub: "لتلقي الرسائل افتح البوت واضغط Start مرة واحدة.",
+      rem_on: "التنبيهات: مفعّلة",
+      rem_off: "التنبيهات: متوقفة",
+      open_bot: "فتح البوت",
+      sync_bot: "مزامنة",
+      sync_ok: "تم إرسال الإعدادات ✅",
+      sync_need_city: "اختر مدينة أولاً",
+      sync_fail: "فشلت المزامنة",
     },
   };
 
@@ -682,6 +689,7 @@
     { key:"Isha",    ar:"العشاء",   nameKey:"isha" },
   ];
 
+  // Aladhan method ids
   const METHODS = [
     { id: 2,  code:"ISNA",        title:"ISNA" },
     { id: 3,  code:"MWL",         title:"MWL" },
@@ -690,9 +698,9 @@
     { id: 15, code:"MOONSIGHTING",title:"Moonsighting" },
   ];
 
-  // ---------------------------
-  // storage helpers
-  // ---------------------------
+  // ============================================================
+  // storage
+  // ============================================================
   const S = {
     get lang(){ return localStorage.getItem("pt_lang") || "ru"; },
     set lang(v){ localStorage.setItem("pt_lang", v); },
@@ -707,18 +715,13 @@
     },
     set savedCities(v){ localStorage.setItem("pt_saved", JSON.stringify(v)); },
 
-    // reminders
-    get remEnabled(){ return (localStorage.getItem("pt_rem_enabled") || "0") === "1"; },
-    set remEnabled(v){ localStorage.setItem("pt_rem_enabled", v ? "1" : "0"); },
-    // per-day fired keys
-    firedKey(day, prayerKey){ return `pt_fired_${day}_${prayerKey}`; },
-    getFired(day, prayerKey){ return localStorage.getItem(this.firedKey(day, prayerKey)) === "1"; },
-    setFired(day, prayerKey){ localStorage.setItem(this.firedKey(day, prayerKey), "1"); },
+    get remEnabled(){ return (localStorage.getItem("pt_bot_rem_enabled") || "1") === "1"; },
+    set remEnabled(v){ localStorage.setItem("pt_bot_rem_enabled", v ? "1" : "0"); },
   };
 
-  // ---------------------------
+  // ============================================================
   // DOM
-  // ---------------------------
+  // ============================================================
   const cityPill   = document.getElementById("cityPill");
   const cityTitle  = document.getElementById("cityTitle");
   const citySub    = document.getElementById("citySub");
@@ -733,12 +736,12 @@
   const statusText = document.getElementById("statusText");
   const noteText   = document.getElementById("noteText");
 
-  // reminders UI
+  // reminders UI (bot)
   const remTitle = document.getElementById("remTitle");
   const remSub = document.getElementById("remSub");
   const remSwitch = document.getElementById("remSwitch");
-  const remEnableBtn = document.getElementById("remEnableBtn");
-  const remTestBtn = document.getElementById("remTestBtn");
+  const openBotBtn = document.getElementById("openBotBtn");
+  const syncBotBtn = document.getElementById("syncBotBtn");
 
   // modal
   const modalOverlay = document.getElementById("modalOverlay");
@@ -755,19 +758,18 @@
   const langEn = document.getElementById("langEn");
   const langAr = document.getElementById("langAr");
 
-  // ---------------------------
+  // ============================================================
   // state
-  // ---------------------------
+  // ============================================================
   let lang = S.lang;
   let method = S.method;
-  let city = S.city; // {name, display, lat, lon}
-  let timings = null; // {Fajr:"HH:MM", ...}
+  let city = S.city;   // {name, display, lat, lon}
+  let timings = null;  // {Fajr:"HH:MM", ...}
   let timerTick = null;
-  let reminderTick = null;
 
-  // ---------------------------
-  // UI helpers
-  // ---------------------------
+  // ============================================================
+  // helpers
+  // ============================================================
   function t(key, ...args){
     const d = i18n[lang] || i18n.ru;
     const v = d[key];
@@ -792,10 +794,6 @@
     return {h, m};
   }
 
-  function todayKey(d = new Date()){
-    return `${d.getFullYear()}${fmt2(d.getMonth()+1)}${fmt2(d.getDate())}`;
-  }
-
   function msUntilNextPrayer(now, list){
     const future = list.find(x => x.at.getTime() > now.getTime());
     if (future) return { next: future, ms: future.at.getTime() - now.getTime() };
@@ -804,6 +802,28 @@
     const tomorrow = new Date(first.at.getTime());
     tomorrow.setDate(tomorrow.getDate() + 1);
     return { next: {...first, at: tomorrow}, ms: tomorrow.getTime() - now.getTime() };
+  }
+
+  function escapeHtml(s){
+    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function methodIdFromCode(code){
+    return (METHODS.find(m => m.code === code)?.id) ?? 4;
+  }
+
+  function setStatus(text){ statusText.textContent = text; }
+
+  function renderCityPill(){
+    if (!city) {
+      cityTitle.textContent = t("city_detecting");
+      citySub.textContent = t("city_tap_choose");
+      return;
+    }
+    cityTitle.textContent = city.name || city.display || "—";
+    citySub.textContent = city.display || "";
   }
 
   function buildPrayerItems(){
@@ -831,6 +851,8 @@
         S.method = method;
         renderMethods();
         await refreshTimings();
+        // при смене метода — отправим на сервер (если выбран город)
+        if (city) await syncToBotServer();
       };
       methodRow.appendChild(b);
     });
@@ -863,6 +885,7 @@
     if (!timings) {
       remainText.textContent = "--:--:--";
       nextText.textContent = "—";
+      untilLabel.textContent = t("until_next");
       return;
     }
 
@@ -885,107 +908,86 @@
     if (idx >= 0 && cards[idx]) cards[idx].classList.add("next");
   }
 
-  function setStatus(text){
-    statusText.textContent = text;
-  }
-
-  function renderCityPill(){
-    if (!city) {
-      cityTitle.textContent = t("city_detecting");
-      citySub.textContent = "—";
-      return;
-    }
-    cityTitle.textContent = city.name || city.display || "—";
-    citySub.textContent = city.display || "";
-  }
-
-  function escapeHtml(s){
-    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[c]));
-  }
-
-  // ---------------------------
-  // Reminders (15 minutes before)
-  // IMPORTANT LIMITATION:
-  // - Works while mini app is open.
-  // - True background push requires your Telegram bot/backend scheduler.
-  // ---------------------------
   function renderRemindersUI(){
     remTitle.textContent = t("rem_title");
     remSub.textContent = t("rem_sub");
-    remEnableBtn.textContent = t("rem_enable");
-    remTestBtn.textContent = t("rem_test");
+    openBotBtn.textContent = t("open_bot");
+    syncBotBtn.textContent = t("sync_bot");
 
     const on = S.remEnabled;
     remSwitch.classList.toggle("on", on);
     remSwitch.setAttribute("aria-checked", on ? "true" : "false");
-    noteText.textContent = on ? t("rem_note_on") : t("rem_note_off");
+    noteText.textContent = on ? t("rem_on") : t("rem_off");
   }
 
-  async function requestNotificationPermission(){
-    // Web Notification permission (may or may not work inside Telegram WebView)
-    if (!("Notification" in window)) {
-      return false;
+  // ============================================================
+  // API calls to your server (bot notifications)
+  // ============================================================
+  function getInitData(){
+    return window.Telegram?.WebApp?.initData || "";
+  }
+
+  async function apiPost(path, body){
+    const url = API_BASE.replace(/\/+$/,"") + path;
+    const res = await fetch(url, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(body)
+    });
+    // сервер может вернуть 401 если initData невалидный
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return await res.json().catch(() => ({}));
+  }
+
+  async function syncToBotServer(){
+    if (!city) {
+      try { tg?.showAlert?.(t("sync_need_city")); } catch(_) {}
+      return;
     }
-    if (Notification.permission === "granted") return true;
-    if (Notification.permission === "denied") return false;
+    const initData = getInitData();
+    if (!initData) {
+      // вне Telegram WebApp не синкаем
+      return;
+    }
+
+    const methodId = methodIdFromCode(method);
 
     try {
-      const p = await Notification.requestPermission();
-      return p === "granted";
-    } catch(_) {
-      return false;
+      // 1) сохранить город/метод на сервере
+      await apiPost("/api/save", {
+        initData,
+        lat: Number(city.lat),
+        lon: Number(city.lon),
+        method: methodId
+      });
+
+      // 2) сохранить включенность напоминаний
+      await apiPost("/api/reminders", {
+        initData,
+        enabled: !!S.remEnabled
+      });
+
+      setStatus(t("sync_ok"));
+      try { tg?.HapticFeedback?.notificationOccurred?.("success"); } catch(_) {}
+    } catch(e) {
+      console.error(e);
+      setStatus(t("sync_fail"));
+      try { tg?.HapticFeedback?.notificationOccurred?.("error"); } catch(_) {}
     }
   }
 
-  function notifyUser(title, message){
-    // 1) try system notification
-    if ("Notification" in window && Notification.permission === "granted") {
-      try { new Notification(title, { body: message }); return; } catch(_) {}
-    }
-    // 2) try Telegram popup
+  function openBot(){
+    const link = `https://t.me/${BOT_USERNAME}?start=1`;
     try {
-      tg?.HapticFeedback?.notificationOccurred?.("success");
-      tg?.showPopup?.({ title, message, buttons: [{type:"ok"}] });
+      tg?.openTelegramLink?.(link);
       return;
     } catch(_) {}
-    // 3) fallback alert
-    try { alert(title + "\n" + message); } catch(_) {}
+    try { window.open(link, "_blank"); } catch(_) {}
   }
 
-  function startReminderEngine(){
-    if (reminderTick) clearInterval(reminderTick);
-
-    reminderTick = setInterval(() => {
-      if (!S.remEnabled) return;
-      if (!timings) return;
-
-      const items = buildPrayerItems();
-      const now = new Date();
-      const day = todayKey(now);
-
-      for (const p of items) {
-        // reminder time = prayerTime - 15 minutes
-        const fireAt = new Date(p.at.getTime() - 15 * 60 * 1000);
-
-        // if we've already fired today -> skip
-        if (S.getFired(day, p.key)) continue;
-
-        // fire when now >= fireAt and now < fireAt + 2 minutes (window)
-        if (now.getTime() >= fireAt.getTime() && now.getTime() < fireAt.getTime() + 2 * 60 * 1000) {
-          S.setFired(day, p.key);
-
-          const msg = t("rem_popup_msg", p.name, p.time);
-          notifyUser(t("rem_popup_title"), msg);
-        }
-      }
-    }, 10000); // every 10 seconds
-  }
-
-  // ---------------------------
+  // ============================================================
   // City search (Nominatim)
-  // ---------------------------
+  // ============================================================
   let searchAbort = null;
   async function nominatimSearch(q){
     if (!q || q.trim().length < 2) return [];
@@ -993,10 +995,7 @@
     searchAbort = new AbortController();
 
     const url = "https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&q=" + encodeURIComponent(q.trim());
-    const res = await fetch(url, {
-      signal: searchAbort.signal,
-      headers: { "Accept": "application/json" }
-    });
+    const res = await fetch(url, { signal: searchAbort.signal, headers: { "Accept": "application/json" } });
     if (!res.ok) throw new Error("geocode failed");
     const arr = await res.json();
 
@@ -1014,86 +1013,9 @@
     });
   }
 
-  function openModal(){
-    modalTitle.textContent = t("city_pick");
-    modalSub.textContent = t("city_pick_sub");
-    modalHint.textContent = t("city_pick_hint");
-    btnClearSaved.textContent = "🗑 " + t("clear_saved");
-    btnGeoInModal.textContent = "📡 " + t("use_geo");
-
-    cityInput.value = "";
-    resultsEl.innerHTML = "";
-    renderSavedCitiesIntoResults();
-    modalOverlay.classList.add("show");
-
-    setTimeout(() => cityInput.focus(), 50);
-    try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch(_) {}
-  }
-
-  function closeModal(){
-    modalOverlay.classList.remove("show");
-  }
-
-  function renderSavedCitiesIntoResults(){
-    const saved = S.savedCities;
-    if (!saved.length) return;
-
-    const sep = document.createElement("div");
-    sep.className = "hint";
-    sep.style.margin = "6px 2px 2px 2px";
-    sep.textContent = t("saved");
-    resultsEl.appendChild(sep);
-
-    saved.slice(0, 8).forEach(item => {
-      const el = document.createElement("div");
-      el.className = "item saved";
-      el.innerHTML = `<div class="t1">${escapeHtml(item.name)}</div><div class="t2">${escapeHtml(item.display || "")}</div>`;
-      el.onclick = async () => { await pickCity(item, true); closeModal(); };
-      resultsEl.appendChild(el);
-    });
-  }
-
-  function renderSearchResults(list){
-    resultsEl.innerHTML = "";
-    renderSavedCitiesIntoResults();
-
-    const sep = document.createElement("div");
-    sep.className = "hint";
-    sep.style.margin = "10px 2px 2px 2px";
-    sep.textContent = t("search_results");
-    resultsEl.appendChild(sep);
-
-    list.forEach(item => {
-      const el = document.createElement("div");
-      el.className = "item";
-      el.innerHTML = `<div class="t1">${escapeHtml(item.name)}</div><div class="t2">${escapeHtml(item.display || "")}</div>`;
-      el.onclick = async () => { await pickCity(item, true); closeModal(); };
-      resultsEl.appendChild(el);
-    });
-  }
-
-  async function pickCity(item, saveToSaved){
-    city = item;
-    S.city = city;
-    renderCityPill();
-
-    if (saveToSaved) {
-      const saved = S.savedCities;
-      const key = `${item.lat.toFixed(5)},${item.lon.toFixed(5)}`;
-      const exists = saved.some(x => (x._k || `${x.lat.toFixed(5)},${x.lon.toFixed(5)}`) === key);
-      if (!exists) {
-        saved.unshift({...item, _k:key});
-        S.savedCities = saved.slice(0, 12);
-      }
-    }
-
-    await refreshTimings();
-    try { tg?.HapticFeedback?.notificationOccurred?.("success"); } catch(_) {}
-  }
-
-  // ---------------------------
+  // ============================================================
   // Geolocation
-  // ---------------------------
+  // ============================================================
   async function useGeolocation(){
     setStatus(t("status_loading"));
     try {
@@ -1137,13 +1059,9 @@
     }
   }
 
-  // ---------------------------
-  // Aladhan timings API
-  // ---------------------------
-  function methodIdFromCode(code){
-    return (METHODS.find(m => m.code === code)?.id) ?? 4;
-  }
-
+  // ============================================================
+  // Aladhan timings API (для отображения в мини-апп)
+  // ============================================================
   async function fetchTimings(lat, lon){
     const id = methodIdFromCode(method);
     const url = `https://api.aladhan.com/v1/timings?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&method=${id}`;
@@ -1173,9 +1091,6 @@
       if (timerTick) clearInterval(timerTick);
       timerTick = setInterval(renderTimer, 1000);
 
-      // ensure reminders engine runs (if enabled)
-      startReminderEngine();
-
       setStatus(t("status_ok"));
     } catch (e) {
       console.error(e);
@@ -1183,9 +1098,91 @@
     }
   }
 
-  // ---------------------------
+  // ============================================================
+  // Modal / City pick
+  // ============================================================
+  function openModal(){
+    modalTitle.textContent = t("city_pick");
+    modalSub.textContent = t("city_pick_sub");
+    modalHint.textContent = t("city_pick_hint");
+    btnClearSaved.textContent = "🗑 " + t("clear_saved");
+    btnGeoInModal.textContent = "📡 " + t("use_geo");
+
+    cityInput.value = "";
+    resultsEl.innerHTML = "";
+    renderSavedCitiesIntoResults();
+    modalOverlay.classList.add("show");
+
+    setTimeout(() => cityInput.focus(), 50);
+    try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch(_) {}
+  }
+
+  function closeModal(){ modalOverlay.classList.remove("show"); }
+
+  function renderSavedCitiesIntoResults(){
+    const saved = S.savedCities;
+    if (!saved.length) return;
+
+    const sep = document.createElement("div");
+    sep.className = "hint";
+    sep.style.margin = "6px 2px 2px 2px";
+    sep.textContent = t("saved");
+    resultsEl.appendChild(sep);
+
+    saved.slice(0, 10).forEach(item => {
+      const el = document.createElement("div");
+      el.className = "item saved";
+      el.innerHTML = `<div class="t1">${escapeHtml(item.name)}</div><div class="t2">${escapeHtml(item.display || "")}</div>`;
+      el.onclick = async () => { await pickCity(item, true); closeModal(); };
+      resultsEl.appendChild(el);
+    });
+  }
+
+  function renderSearchResults(list){
+    resultsEl.innerHTML = "";
+    renderSavedCitiesIntoResults();
+
+    const sep = document.createElement("div");
+    sep.className = "hint";
+    sep.style.margin = "10px 2px 2px 2px";
+    sep.textContent = t("search_results");
+    resultsEl.appendChild(sep);
+
+    list.forEach(item => {
+      const el = document.createElement("div");
+      el.className = "item";
+      el.innerHTML = `<div class="t1">${escapeHtml(item.name)}</div><div class="t2">${escapeHtml(item.display || "")}</div>`;
+      el.onclick = async () => { await pickCity(item, true); closeModal(); };
+      resultsEl.appendChild(el);
+    });
+  }
+
+  async function pickCity(item, saveToSaved){
+    city = item;
+    S.city = city;
+    renderCityPill();
+
+    if (saveToSaved) {
+      const saved = S.savedCities;
+      const key = `${item.lat.toFixed(5)},${item.lon.toFixed(5)}`;
+      const exists = saved.some(x => (x._k || `${x.lat.toFixed(5)},${x.lon.toFixed(5)}`) === key);
+      if (!exists) {
+        saved.unshift({...item, _k:key});
+        S.savedCities = saved.slice(0, 12);
+      }
+    }
+
+    await refreshTimings();
+
+    // ✅ ВАЖНО: сразу синхронизируем с сервером, чтобы бот начал слать уведомления
+    await syncToBotServer();
+
+    try { tg?.HapticFeedback?.notificationOccurred?.("success"); } catch(_) {}
+  }
+
+  // ============================================================
   // Language switching
-  // ---------------------------
+  // ============================================================
   async function setLang(newLang){
     lang = newLang;
     S.lang = lang;
@@ -1201,9 +1198,9 @@
     if (modalOverlay.classList.contains("show")) openModal();
   }
 
-  // ---------------------------
+  // ============================================================
   // Events
-  // ---------------------------
+  // ============================================================
   cityPill.onclick = openModal;
   modalClose.onclick = closeModal;
   modalOverlay.onclick = (e) => { if (e.target === modalOverlay) closeModal(); };
@@ -1241,62 +1238,49 @@
     }, 250);
   });
 
-  // reminders interactions
-  remSwitch.onclick = () => {
+  // reminders (bot)
+  remSwitch.onclick = async () => {
     S.remEnabled = !S.remEnabled;
     renderRemindersUI();
-    startReminderEngine();
+
+    // синхронизируем включенность на сервер
+    await syncToBotServer();
+
     try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch(_) {}
   };
 
-  remEnableBtn.onclick = async () => {
-    const ok = await requestNotificationPermission();
-    if (!ok) {
-      // still keep reminders working via in-app popup
-      try { tg?.HapticFeedback?.notificationOccurred?.("error"); } catch(_) {}
-      try { tg?.showAlert?.(t("rem_perm_denied")); } catch(_) {}
-    } else {
-      try { tg?.HapticFeedback?.notificationOccurred?.("success"); } catch(_) {}
-    }
+  openBotBtn.onclick = () => openBot();
+  syncBotBtn.onclick = async () => {
+    await syncToBotServer();
   };
 
-  remTestBtn.onclick = () => {
-    const name = timings ? buildPrayerItems()[0]?.name : t("fajr");
-    notifyUser(t("rem_popup_title"), t("rem_popup_msg", name, "00:00"));
-  };
-
-  // ---------------------------
+  // ============================================================
   // Boot
-  // ---------------------------
+  // ============================================================
   function boot(){
     setDirByLang();
     setLangButtons();
     renderMethods();
     renderRemindersUI();
 
-    if (!city) {
-      cityTitle.textContent = t("city_detecting");
-      citySub.textContent = "—";
-      setStatus(t("status_loading"));
+    renderCityPill();
 
-      // try geolocation once at first run
+    // Если город уже сохранён — подтягиваем времена
+    if (city) {
+      refreshTimings();
+    } else {
+      setStatus(t("status_loading"));
+      // Попробуем геолокацию один раз при старте
       useGeolocation().finally(() => {
         if (!city) {
           setStatus(t("status_err"));
-          cityTitle.textContent = t("city_detecting");
-          citySub.textContent = (lang === "ar") ? "اضغط لاختيار المدينة" : (lang === "en" ? "Tap to choose city" : "Нажмите, чтобы выбрать город");
+          renderCityPill();
         }
       });
-    } else {
-      renderCityPill();
-      refreshTimings();
     }
-
-    startReminderEngine();
   }
 
   boot();
-
 })();
 </script>
 </body>
