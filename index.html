@@ -39,7 +39,6 @@
       overflow-x:hidden;
     }
 
-    /* subtle stars/noise */
     body:before{
       content:"";
       position:fixed; inset:0;
@@ -286,25 +285,91 @@
 
     .footer{
       margin-top: 14px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
       color: rgba(255,255,255,.28);
       font-weight: 800;
       font-size: 11px;
       padding: 2px 2px 0 2px;
-      gap: 10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
     }
-    .footer .btn{
+
+    /* reminders card */
+    .remCard{
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
       border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.03);
-      color: rgba(255,255,255,.75);
-      padding: 8px 10px;
-      border-radius: 14px;
-      font-weight: 900;
+      position:relative;
+      overflow:hidden;
+    }
+    .remTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom: 8px;
+    }
+    .remTitle{
+      font-weight: 950;
+      font-size: 14px;
+      color: rgba(255,255,255,.92);
+    }
+    .remSub{
+      font-weight: 800;
+      font-size: 11px;
+      color: rgba(255,255,255,.40);
+      line-height: 1.35;
+    }
+    .switch{
+      width: 54px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      position:relative;
+      cursor:pointer;
+      flex:0 0 auto;
+    }
+    .switch.on{
+      border-color: rgba(103,229,255,.55);
+      background: rgba(103,229,255,.10);
+      box-shadow: 0 0 0 2px rgba(103,229,255,.08) inset;
+    }
+    .knob{
+      position:absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      left: 6px;
+      width: 22px;
+      height: 22px;
+      border-radius:999px;
+      background: rgba(255,255,255,.80);
+      box-shadow: 0 6px 16px rgba(0,0,0,.35);
+      transition: left .18s ease;
+    }
+    .switch.on .knob{ left: 26px; background: rgba(255,255,255,.95); }
+    .remBtns{
+      display:flex;
+      gap:10px;
+      margin-top: 10px;
+    }
+    .btn{
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color:#fff;
+      padding: 10px 12px;
+      border-radius: 16px;
+      font-weight: 950;
       cursor:pointer;
       user-select:none;
-      white-space:nowrap;
+      flex:1;
+    }
+    .btn.primary{
+      border-color: rgba(103,229,255,.55);
+      background: rgba(103,229,255,.12);
     }
 
     /* MODAL */
@@ -400,31 +465,10 @@
       border-color: rgba(103,229,255,.35);
       background: rgba(103,229,255,.05);
     }
-
     .rowBtns{
       display:flex;
       gap:10px;
       margin-top: 12px;
-    }
-    .primary{
-      flex:1;
-      border:1px solid rgba(103,229,255,.55);
-      background: rgba(103,229,255,.12);
-      color:#fff;
-      padding: 12px 12px;
-      border-radius: 16px;
-      font-weight: 950;
-      cursor:pointer;
-    }
-    .secondary{
-      flex:1;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.04);
-      color:#fff;
-      padding: 12px 12px;
-      border-radius: 16px;
-      font-weight: 950;
-      cursor:pointer;
     }
 
     /* RTL tweaks for Arabic */
@@ -432,6 +476,7 @@
     [dir="rtl"] .pill{ direction: rtl; }
     [dir="rtl"] .timer{ direction: rtl; }
     [dir="rtl"] .prayer{ direction: rtl; }
+    [dir="rtl"] .remCard{ direction: rtl; }
     [dir="rtl"] .names .n2{ opacity:.55; }
   </style>
 </head>
@@ -465,16 +510,31 @@
       </div>
     </div>
 
+    <!-- ✅ reminders -->
+    <div class="remCard" id="remCard">
+      <div class="remTop">
+        <div>
+          <div class="remTitle" id="remTitle">—</div>
+          <div class="remSub" id="remSub">—</div>
+        </div>
+        <div class="switch" id="remSwitch" role="switch" aria-checked="false">
+          <div class="knob"></div>
+        </div>
+      </div>
+      <div class="remBtns">
+        <button class="btn primary" id="remEnableBtn">—</button>
+        <button class="btn" id="remTestBtn">—</button>
+      </div>
+    </div>
+
     <div class="row" id="methodRow"></div>
 
     <div class="list" id="prayerList"></div>
 
+    <!-- ✅ низ: только статус, без кнопок -->
     <div class="footer">
       <div id="statusText">—</div>
-      <div style="display:flex; gap:8px;">
-        <button class="btn" id="btnRefresh">↻</button>
-        <button class="btn" id="btnUseGeo">📡</button>
-      </div>
+      <div id="noteText"></div>
     </div>
   </div>
 
@@ -495,8 +555,8 @@
         <div class="results" id="results"></div>
 
         <div class="rowBtns">
-          <button class="secondary" id="btnClearSaved">🗑</button>
-          <button class="primary" id="btnGeoInModal">📡</button>
+          <button class="btn" id="btnClearSaved">🗑</button>
+          <button class="btn primary" id="btnGeoInModal">📡</button>
         </div>
       </div>
     </div>
@@ -531,16 +591,24 @@
       status_ok: "Обновлено",
       status_loading: "Загрузка…",
       status_err: "Не удалось обновить",
-      refresh: "Обновить",
-      method: "Метод",
       fajr: "Фаджр",
       dhuhr: "Зухр",
       asr: "Аср",
       maghrib: "Магриб",
       isha: "Иша",
-      next: "Следующий",
       saved: "Сохранённые",
       search_results: "Результаты",
+
+      // reminders
+      rem_title: "Оповещения за 15 минут",
+      rem_sub: "Работает, пока мини-приложение открыто. Если браузер/Telegram разрешит уведомления — покажем системное, иначе покажем всплывающее окно.",
+      rem_enable: "Разрешить уведомления",
+      rem_test: "Тест",
+      rem_note_on: "Оповещения: включены",
+      rem_note_off: "Оповещения: выключены",
+      rem_popup_title: "Скоро намаз",
+      rem_popup_msg: (name, at) => `${name} через 15 минут • ${at}`,
+      rem_perm_denied: "Разрешение на уведомления не выдано",
     },
     en: {
       city_detecting: "Detecting city…",
@@ -554,16 +622,24 @@
       status_ok: "Updated",
       status_loading: "Loading…",
       status_err: "Update failed",
-      refresh: "Refresh",
-      method: "Method",
       fajr: "Fajr",
       dhuhr: "Dhuhr",
       asr: "Asr",
       maghrib: "Maghrib",
       isha: "Isha",
-      next: "Next",
       saved: "Saved",
       search_results: "Results",
+
+      // reminders
+      rem_title: "Reminders 15 minutes before",
+      rem_sub: "Works while the mini app is open. If notifications are allowed, we show a system notification; otherwise we show an in-app popup.",
+      rem_enable: "Allow notifications",
+      rem_test: "Test",
+      rem_note_on: "Reminders: ON",
+      rem_note_off: "Reminders: OFF",
+      rem_popup_title: "Prayer soon",
+      rem_popup_msg: (name, at) => `${name} in 15 minutes • ${at}`,
+      rem_perm_denied: "Notification permission not granted",
     },
     ar: {
       city_detecting: "جارٍ تحديد المدينة…",
@@ -577,16 +653,24 @@
       status_ok: "تم التحديث",
       status_loading: "جارٍ التحميل…",
       status_err: "فشل التحديث",
-      refresh: "تحديث",
-      method: "الطريقة",
       fajr: "الفجر",
       dhuhr: "الظهر",
       asr: "العصر",
       maghrib: "المغرب",
       isha: "العشاء",
-      next: "التالي",
       saved: "محفوظ",
       search_results: "النتائج",
+
+      // reminders
+      rem_title: "تنبيهات قبل 15 دقيقة",
+      rem_sub: "تعمل أثناء فتح التطبيق المصغّر. إذا سُمِح بالإشعارات سنعرض إشعار النظام، وإلا سنعرض نافذة داخل التطبيق.",
+      rem_enable: "السماح بالإشعارات",
+      rem_test: "اختبار",
+      rem_note_on: "التنبيهات: مفعّلة",
+      rem_note_off: "التنبيهات: متوقفة",
+      rem_popup_title: "الصلاة قريبًا",
+      rem_popup_msg: (name, at) => `${name} بعد 15 دقيقة • ${at}`,
+      rem_perm_denied: "لم يتم منح إذن الإشعارات",
     },
   };
 
@@ -614,14 +698,22 @@
     set lang(v){ localStorage.setItem("pt_lang", v); },
     get method(){ return localStorage.getItem("pt_method") || "UMM_AL_QURA"; },
     set method(v){ localStorage.setItem("pt_method", v); },
-    get city(){ // {name, display, lat, lon}
+    get city(){
       try { return JSON.parse(localStorage.getItem("pt_city") || "null"); } catch(_) { return null; }
     },
     set city(v){ localStorage.setItem("pt_city", JSON.stringify(v)); },
     get savedCities(){
       try { return JSON.parse(localStorage.getItem("pt_saved") || "[]"); } catch(_) { return []; }
     },
-    set savedCities(v){ localStorage.setItem("pt_saved", JSON.stringify(v)); }
+    set savedCities(v){ localStorage.setItem("pt_saved", JSON.stringify(v)); },
+
+    // reminders
+    get remEnabled(){ return (localStorage.getItem("pt_rem_enabled") || "0") === "1"; },
+    set remEnabled(v){ localStorage.setItem("pt_rem_enabled", v ? "1" : "0"); },
+    // per-day fired keys
+    firedKey(day, prayerKey){ return `pt_fired_${day}_${prayerKey}`; },
+    getFired(day, prayerKey){ return localStorage.getItem(this.firedKey(day, prayerKey)) === "1"; },
+    setFired(day, prayerKey){ localStorage.setItem(this.firedKey(day, prayerKey), "1"); },
   };
 
   // ---------------------------
@@ -639,8 +731,14 @@
   const prayerList = document.getElementById("prayerList");
 
   const statusText = document.getElementById("statusText");
-  const btnRefresh = document.getElementById("btnRefresh");
-  const btnUseGeo  = document.getElementById("btnUseGeo");
+  const noteText   = document.getElementById("noteText");
+
+  // reminders UI
+  const remTitle = document.getElementById("remTitle");
+  const remSub = document.getElementById("remSub");
+  const remSwitch = document.getElementById("remSwitch");
+  const remEnableBtn = document.getElementById("remEnableBtn");
+  const remTestBtn = document.getElementById("remTestBtn");
 
   // modal
   const modalOverlay = document.getElementById("modalOverlay");
@@ -665,6 +763,7 @@
   let city = S.city; // {name, display, lat, lon}
   let timings = null; // {Fajr:"HH:MM", ...}
   let timerTick = null;
+  let reminderTick = null;
 
   // ---------------------------
   // UI helpers
@@ -693,12 +792,14 @@
     return {h, m};
   }
 
+  function todayKey(d = new Date()){
+    return `${d.getFullYear()}${fmt2(d.getMonth()+1)}${fmt2(d.getDate())}`;
+  }
+
   function msUntilNextPrayer(now, list){
-    // list: [{key, at: Date, name, ar}]
     const future = list.find(x => x.at.getTime() > now.getTime());
     if (future) return { next: future, ms: future.at.getTime() - now.getTime() };
 
-    // wrap to tomorrow's first prayer
     const first = list[0];
     const tomorrow = new Date(first.at.getTime());
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -715,7 +816,6 @@
       const name = t(p.nameKey);
       return { key:p.key, name, ar:p.ar, time:v, at };
     });
-    // ensure sorted by time
     base.sort((a,b) => a.at - b.at);
     return base;
   }
@@ -779,7 +879,6 @@
     remainText.textContent = `${fmt2(hh)}:${fmt2(mm)}:${fmt2(ss)}`;
     nextText.textContent = t("until_fmt", next.name);
 
-    // highlight list if needed
     const cards = prayerList.querySelectorAll(".prayer");
     cards.forEach(el => el.classList.remove("next"));
     const idx = items.findIndex(x => x.key === next.key);
@@ -807,6 +906,84 @@
   }
 
   // ---------------------------
+  // Reminders (15 minutes before)
+  // IMPORTANT LIMITATION:
+  // - Works while mini app is open.
+  // - True background push requires your Telegram bot/backend scheduler.
+  // ---------------------------
+  function renderRemindersUI(){
+    remTitle.textContent = t("rem_title");
+    remSub.textContent = t("rem_sub");
+    remEnableBtn.textContent = t("rem_enable");
+    remTestBtn.textContent = t("rem_test");
+
+    const on = S.remEnabled;
+    remSwitch.classList.toggle("on", on);
+    remSwitch.setAttribute("aria-checked", on ? "true" : "false");
+    noteText.textContent = on ? t("rem_note_on") : t("rem_note_off");
+  }
+
+  async function requestNotificationPermission(){
+    // Web Notification permission (may or may not work inside Telegram WebView)
+    if (!("Notification" in window)) {
+      return false;
+    }
+    if (Notification.permission === "granted") return true;
+    if (Notification.permission === "denied") return false;
+
+    try {
+      const p = await Notification.requestPermission();
+      return p === "granted";
+    } catch(_) {
+      return false;
+    }
+  }
+
+  function notifyUser(title, message){
+    // 1) try system notification
+    if ("Notification" in window && Notification.permission === "granted") {
+      try { new Notification(title, { body: message }); return; } catch(_) {}
+    }
+    // 2) try Telegram popup
+    try {
+      tg?.HapticFeedback?.notificationOccurred?.("success");
+      tg?.showPopup?.({ title, message, buttons: [{type:"ok"}] });
+      return;
+    } catch(_) {}
+    // 3) fallback alert
+    try { alert(title + "\n" + message); } catch(_) {}
+  }
+
+  function startReminderEngine(){
+    if (reminderTick) clearInterval(reminderTick);
+
+    reminderTick = setInterval(() => {
+      if (!S.remEnabled) return;
+      if (!timings) return;
+
+      const items = buildPrayerItems();
+      const now = new Date();
+      const day = todayKey(now);
+
+      for (const p of items) {
+        // reminder time = prayerTime - 15 minutes
+        const fireAt = new Date(p.at.getTime() - 15 * 60 * 1000);
+
+        // if we've already fired today -> skip
+        if (S.getFired(day, p.key)) continue;
+
+        // fire when now >= fireAt and now < fireAt + 2 minutes (window)
+        if (now.getTime() >= fireAt.getTime() && now.getTime() < fireAt.getTime() + 2 * 60 * 1000) {
+          S.setFired(day, p.key);
+
+          const msg = t("rem_popup_msg", p.name, p.time);
+          notifyUser(t("rem_popup_title"), msg);
+        }
+      }
+    }, 10000); // every 10 seconds
+  }
+
+  // ---------------------------
   // City search (Nominatim)
   // ---------------------------
   let searchAbort = null;
@@ -818,11 +995,7 @@
     const url = "https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&q=" + encodeURIComponent(q.trim());
     const res = await fetch(url, {
       signal: searchAbort.signal,
-      headers: {
-        // Nominatim prefers a descriptive UA; browsers restrict UA header.
-        // Keep it simple; Telegram WebView usually works fine.
-        "Accept": "application/json"
-      }
+      headers: { "Accept": "application/json" }
     });
     if (!res.ok) throw new Error("geocode failed");
     const arr = await res.json();
@@ -831,18 +1004,13 @@
       const lat = parseFloat(x.lat);
       const lon = parseFloat(x.lon);
       const display = x.display_name || "";
-      // pick a short name
       const cityName =
         x.address?.city || x.address?.town || x.address?.village || x.address?.municipality ||
         (display.split(",")[0] || "").trim();
 
       const country = x.address?.country || "";
       const short = [cityName, country].filter(Boolean).join(", ");
-      return {
-        name: short || cityName || display.split(",")[0],
-        display,
-        lat, lon
-      };
+      return { name: short || cityName || display.split(",")[0], display, lat, lon };
     });
   }
 
@@ -880,16 +1048,12 @@
       const el = document.createElement("div");
       el.className = "item saved";
       el.innerHTML = `<div class="t1">${escapeHtml(item.name)}</div><div class="t2">${escapeHtml(item.display || "")}</div>`;
-      el.onclick = async () => {
-        await pickCity(item, true);
-        closeModal();
-      };
+      el.onclick = async () => { await pickCity(item, true); closeModal(); };
       resultsEl.appendChild(el);
     });
   }
 
   function renderSearchResults(list){
-    // clear all and show saved first + new results
     resultsEl.innerHTML = "";
     renderSavedCitiesIntoResults();
 
@@ -903,10 +1067,7 @@
       const el = document.createElement("div");
       el.className = "item";
       el.innerHTML = `<div class="t1">${escapeHtml(item.name)}</div><div class="t2">${escapeHtml(item.display || "")}</div>`;
-      el.onclick = async () => {
-        await pickCity(item, true);
-        closeModal();
-      };
+      el.onclick = async () => { await pickCity(item, true); closeModal(); };
       resultsEl.appendChild(el);
     });
   }
@@ -948,7 +1109,6 @@
       const lat = pos.coords.latitude;
       const lon = pos.coords.longitude;
 
-      // reverse via Nominatim
       const url = "https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&addressdetails=1&lat=" +
         encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lon);
 
@@ -993,7 +1153,6 @@
     const tim = json?.data?.timings;
     if (!tim) throw new Error("no timings");
 
-    // normalize HH:mm
     const out = {};
     PRAYERS.forEach(p => {
       const raw = String(tim[p.key] || "").slice(0,5);
@@ -1011,9 +1170,11 @@
       renderPrayers();
       renderTimer();
 
-      // start/refresh ticker
       if (timerTick) clearInterval(timerTick);
       timerTick = setInterval(renderTimer, 1000);
+
+      // ensure reminders engine runs (if enabled)
+      startReminderEngine();
 
       setStatus(t("status_ok"));
     } catch (e) {
@@ -1031,13 +1192,12 @@
     setDirByLang();
     setLangButtons();
 
-    // rerender labels
     renderCityPill();
     renderMethods();
     renderPrayers();
     renderTimer();
+    renderRemindersUI();
 
-    // modal texts (if open)
     if (modalOverlay.classList.contains("show")) openModal();
   }
 
@@ -1048,13 +1208,9 @@
   modalClose.onclick = closeModal;
   modalOverlay.onclick = (e) => { if (e.target === modalOverlay) closeModal(); };
 
-  btnRefresh.onclick = refreshTimings;
-  btnUseGeo.onclick = useGeolocation;
-
   btnGeoInModal.onclick = async () => { await useGeolocation(); closeModal(); };
   btnClearSaved.onclick = () => {
     S.savedCities = [];
-    // keep current city, just clear saved list
     resultsEl.innerHTML = "";
     renderSavedCitiesIntoResults();
     try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch(_) {}
@@ -1079,12 +1235,35 @@
         renderSearchResults(list);
       } catch (e) {
         console.error(e);
-        // keep saved list if error
         resultsEl.innerHTML = "";
         renderSavedCitiesIntoResults();
       }
     }, 250);
   });
+
+  // reminders interactions
+  remSwitch.onclick = () => {
+    S.remEnabled = !S.remEnabled;
+    renderRemindersUI();
+    startReminderEngine();
+    try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch(_) {}
+  };
+
+  remEnableBtn.onclick = async () => {
+    const ok = await requestNotificationPermission();
+    if (!ok) {
+      // still keep reminders working via in-app popup
+      try { tg?.HapticFeedback?.notificationOccurred?.("error"); } catch(_) {}
+      try { tg?.showAlert?.(t("rem_perm_denied")); } catch(_) {}
+    } else {
+      try { tg?.HapticFeedback?.notificationOccurred?.("success"); } catch(_) {}
+    }
+  };
+
+  remTestBtn.onclick = () => {
+    const name = timings ? buildPrayerItems()[0]?.name : t("fajr");
+    notifyUser(t("rem_popup_title"), t("rem_popup_msg", name, "00:00"));
+  };
 
   // ---------------------------
   // Boot
@@ -1093,6 +1272,7 @@
     setDirByLang();
     setLangButtons();
     renderMethods();
+    renderRemindersUI();
 
     if (!city) {
       cityTitle.textContent = t("city_detecting");
@@ -1104,13 +1284,15 @@
         if (!city) {
           setStatus(t("status_err"));
           cityTitle.textContent = t("city_detecting");
-          citySub.textContent = "Tap to choose";
+          citySub.textContent = (lang === "ar") ? "اضغط لاختيار المدينة" : (lang === "en" ? "Tap to choose city" : "Нажмите, чтобы выбрать город");
         }
       });
     } else {
       renderCityPill();
       refreshTimings();
     }
+
+    startReminderEngine();
   }
 
   boot();
