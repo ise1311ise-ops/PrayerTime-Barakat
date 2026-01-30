@@ -4,7 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#05070a" />
   <title>PrayerTime Barakat</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
 
   <!-- Telegram Mini App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -371,10 +377,22 @@
         if (!tg) return;
         tg.ready();
         tg.expand();
-        // Ставим цвет под тёмную тему (не обязательно)
         tg.setHeaderColor?.("#05070a");
         tg.setBackgroundColor?.("#05070a");
       }catch(_){}
+    })();
+
+    // -----------------------
+    // PWA: register service worker
+    // -----------------------
+    (function registerSW(){
+      if (!("serviceWorker" in navigator)) return;
+      window.addEventListener("load", async () => {
+        try{
+          // относительный путь важен для GitHub Pages
+          await navigator.serviceWorker.register("./service-worker.js", { scope: "./" });
+        }catch(_){}
+      });
     })();
 
     // -----------------------
@@ -384,7 +402,6 @@
 
     function pad2(n){ return String(n).padStart(2,"0"); }
     function parseHHMM(s){
-      // ожидаем "HH:MM" (иногда API отдаёт "HH:MM (CET)")
       if (!s) return null;
       const m = String(s).match(/(\d{1,2}):(\d{2})/);
       if (!m) return null;
@@ -444,7 +461,6 @@
       const list = $("list");
       list.innerHTML = "";
 
-      // find next
       const now = new Date();
       let next = null;
 
@@ -479,7 +495,6 @@
       const now = new Date();
       let diff = nextDt - now;
 
-      // если уже прошло — считаем до завтрашнего такого же времени
       if (diff <= 0){
         const t = new Date(nextDt.getTime());
         t.setDate(t.getDate() + 1);
@@ -535,7 +550,6 @@
       u.searchParams.set("city", city);
       u.searchParams.set("country", country);
       u.searchParams.set("method", String(methodId));
-      // можно добавить school=1/0 и т.п. при желании
 
       const resp = await fetchWithTimeout(u.toString(), 12000);
       if (!resp.ok) throw new Error("HTTP " + resp.status);
@@ -544,7 +558,6 @@
       const t = json?.data?.timings;
       if (!t) throw new Error("No timings");
 
-      // Берём только нужные
       const out = {};
       for (const p of PRAYERS){
         out[p.key] = t[p.key];
@@ -608,7 +621,6 @@
       try{
         const { timings, meta } = await loadTimings(prefs.city, prefs.country, prefs.method);
 
-        // cache
         saveCache({
           savedAt: Date.now(),
           prefs,
@@ -624,7 +636,6 @@
         setStatus("Обновлено ✅", "ok");
         haptic("light");
       }catch(err){
-        // fallback to cache
         const cache = loadCache();
         if (cache?.timings && cache?.prefs){
           ui.subtitle.textContent = `${cache.prefs.city}, ${cache.prefs.country}`;
@@ -645,7 +656,6 @@
       }
     }
 
-    // Auto refresh when user changes fields (small debounce)
     let debounce = null;
     function scheduleRefresh(){
       if (debounce) clearTimeout(debounce);
@@ -656,14 +666,11 @@
     // Boot
     // -----------------------
     (function boot(){
-      // Defaults
       const defaults = { country:"Germany", city:"Berlin", method:4 };
 
-      // Restore prefs
       const p = loadPrefs() || defaults;
       applyPrefsToUI(p);
 
-      // Try show cached immediately (fast UI)
       const cache = loadCache();
       if (cache?.timings && cache?.prefs){
         applyPrefsToUI(cache.prefs);
@@ -676,13 +683,11 @@
         ui.subtitle.textContent = "Выберите город — получайте время намаза";
       }
 
-      // Listeners
       ui.refresh.addEventListener("click", refresh);
       ui.country.addEventListener("change", scheduleRefresh);
       ui.method.addEventListener("change", scheduleRefresh);
       ui.city.addEventListener("input", scheduleRefresh);
 
-      // First refresh
       refresh();
     })();
   </script>
