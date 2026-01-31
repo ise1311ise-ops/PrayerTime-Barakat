@@ -4,1330 +4,1227 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="color-scheme" content="dark" />
-  <title>PrayerTimes Barakat — Mini App</title>
+  <title>PrayerTime Barakat — Mini App</title>
 
   <!-- Telegram Mini App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
     :root{
-      --bg:#06080b;
-      --card:#0b0f12;
-      --glass: rgba(255,255,255,.06);
-      --line: rgba(255,255,255,.10);
-      --line2: rgba(255,255,255,.06);
+      --bg0:#05070a;
+      --bg1:#020407;
+
       --txt:#ffffff;
       --muted: rgba(255,255,255,.55);
       --muted2: rgba(255,255,255,.35);
+
       --neon:#67E5FF;
-      --neon2: rgba(103,229,255,.22);
-      --shadow: 0 12px 40px rgba(0,0,0,.55);
-      --radius: 18px;
-      --radius2: 22px;
-      --pad: 14px;
-      --safe-b: env(safe-area-inset-bottom, 0px);
-      --safe-t: env(safe-area-inset-top, 0px);
-      --safe-l: env(safe-area-inset-left, 0px);
-      --safe-r: env(safe-area-inset-right, 0px);
+      --neonA: rgba(103,229,255,.15);
+
+      --line: rgba(255,255,255,.12);
+      --line2: rgba(255,255,255,.06);
+
+      --shadow: 0 16px 50px rgba(0,0,0,.55);
+
+      --safeTop: env(safe-area-inset-top);
+      --safeBot: env(safe-area-inset-bottom);
+
+      /* Адаптивные размеры, чтобы НЕ было вертикального скролла */
+      --padH: clamp(10px, 2.5vw, 14px);
+      --gap: clamp(8px, 1.6vh, 12px);
+
+      --titleSp: clamp(22px, 3.6vh, 30px);
+
+      --timerH: clamp(84px, 14.5vh, 96px);
+      --chipH: clamp(34px, 6.0vh, 40px);
+      --prayH: clamp(56px, 10.0vh, 66px);
+
+      --cardR: 22px;
+      --prayR: 20px;
     }
 
-    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--txt); font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    *{ box-sizing: border-box; }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--txt);
+      overflow:hidden; /* ✅ НИКАКОГО СКРОЛЛА */
 
-    /* Background */
-    .bg{
-      position: fixed; inset: 0;
+      /* темный фон + мягкий неон */
       background:
-        linear-gradient(rgba(0,0,0,.18), rgba(0,0,0,.18)),
-        url("./bg_main.png") center/cover no-repeat;
-      filter: saturate(1.05) contrast(1.05);
-      transform: translateZ(0);
-    }
-    .vignette{
-      position: fixed; inset:0;
-      background: radial-gradient(120% 90% at 50% 5%, rgba(0,0,0,.20), rgba(0,0,0,.65));
-      pointer-events: none;
+        radial-gradient(1000px 520px at 50% -10%, rgba(103,229,255,.12), transparent 60%),
+        radial-gradient(900px 520px at 90% 110%, rgba(103,229,255,.06), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1) 42%, #010205);
     }
 
-    /* Layout */
+    /* bg_main.png поверх градиента (как на скрине) */
+    .bgMain{
+      position:fixed; inset:0;
+      pointer-events:none;
+      z-index:0;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.62)),
+        url("bg_main.png") center/cover no-repeat;
+      opacity:.72;
+      filter: saturate(0.95) contrast(1.08);
+    }
+
+    /* звёздочки/пыль */
+    .dust{
+      position:fixed; inset:0;
+      pointer-events:none;
+      z-index:1;
+      opacity:.55;
+      background:
+        radial-gradient(1px 1px at 10% 10%, rgba(255,255,255,.10), transparent 60%),
+        radial-gradient(1px 1px at 30% 25%, rgba(255,255,255,.07), transparent 60%),
+        radial-gradient(1px 1px at 70% 18%, rgba(255,255,255,.06), transparent 60%),
+        radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,.06), transparent 60%),
+        radial-gradient(1px 1px at 20% 70%, rgba(255,255,255,.05), transparent 60%),
+        radial-gradient(1px 1px at 60% 78%, rgba(255,255,255,.06), transparent 60%),
+        radial-gradient(1px 1px at 45% 52%, rgba(255,255,255,.05), transparent 60%),
+        radial-gradient(1px 1px at 78% 66%, rgba(255,255,255,.05), transparent 60%);
+    }
+
     .app{
-      position: relative;
-      min-height: 100%;
-      padding: calc(var(--safe-t) + 10px) calc(var(--safe-r) + 12px) calc(var(--safe-b) + 14px) calc(var(--safe-l) + 12px);
+      position:relative;
+      z-index:2;
+      height: 100svh; /* ✅ стабильнее, чем 100vh на мобилках */
+      max-width: 560px;
+      margin: 0 auto;
+      padding:
+        calc(10px + var(--safeTop))
+        var(--padH)
+        calc(10px + var(--safeBot))
+        var(--padH);
+
+      display:flex;
+      flex-direction:column;
+      gap: var(--gap);
+      overflow:hidden;
     }
 
-    .topbar{
-      display: grid;
+    /* ---------- HEADER (как на скрине: центр город, справа круглая кнопка) ---------- */
+    .header{
+      display:grid;
       grid-template-columns: 44px 1fr 44px;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-      padding: 6px 2px;
+      align-items:center;
+      padding: 4px 2px 2px 2px;
+      flex:0 0 auto;
     }
-    .city{
-      text-align: center;
-      font-weight: 900;
-      font-size: 22px;
-      line-height: 1.1;
-      letter-spacing: .2px;
-      text-shadow: 0 8px 22px rgba(0,0,0,.45);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .iconBtn{
-      width: 44px; height: 44px;
-      border-radius: 999px;
-      border: 1px solid rgba(103,229,255,.22);
-      background: radial-gradient(circle at 30% 25%, rgba(103,229,255,.18), rgba(255,255,255,.02));
-      box-shadow: 0 0 0 1px rgba(255,255,255,.05) inset, 0 10px 24px rgba(0,0,0,.35);
-      display:flex; align-items:center; justify-content:center;
-      cursor: pointer;
-      user-select: none;
-    }
-    .iconBtn:active{ transform: scale(.98); }
-    .iconBtn span{ font-weight: 900; font-size: 18px; opacity:.92; }
 
-    /* “Neon comet” card */
-    .card{
-      position: relative;
-      border-radius: var(--radius2);
-      background: linear-gradient(180deg, rgba(255,255,255,.060), rgba(255,255,255,.018));
+    .cityTitle{
+      justify-self:center;
+      font-weight: 950;
+      font-size: var(--titleSp);
+      letter-spacing: .2px;
+      text-align:center;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 100%;
+      cursor:pointer;
+      user-select:none;
+      padding: 4px 8px;
+      border-radius: 14px;
+    }
+    .cityTitle:active{
+      background: rgba(255,255,255,.04);
+    }
+
+    .circleBtn{
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      display:grid;
+      place-items:center;
+      border:1px solid rgba(103,229,255,.22);
+      background:
+        radial-gradient(circle at 30% 30%, rgba(103,229,255,.18), transparent 62%),
+        rgba(255,255,255,.03);
+      box-shadow: 0 0 0 1px rgba(103,229,255,.06) inset, 0 10px 26px rgba(0,0,0,.28);
+      cursor:pointer;
+      user-select:none;
+      color:#fff;
+      font-weight: 950;
+    }
+    .circleBtn:active{ transform: translateY(1px); }
+
+    .leftGhost{
+      width:44px;height:44px;
+    }
+
+    /* ---------- NEON CARD + COMET ---------- */
+    .neonCard{
+      position:relative;
+      border-radius: var(--cardR);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
       border: 1px solid rgba(255,255,255,.12);
       box-shadow: var(--shadow);
-      overflow: hidden;
-      transform: translateZ(0);
+      overflow:hidden;
+      isolation:isolate;
+      flex:0 0 auto;
     }
-    .card::before{
+    .neonCard:after{
       content:"";
       position:absolute; inset:-2px;
-      background: conic-gradient(from 0deg,
-        rgba(103,229,255,0) 0deg,
-        rgba(103,229,255,.92) 40deg,
-        rgba(103,229,255,0) 80deg,
-        rgba(255,255,255,0) 120deg,
-        rgba(103,229,255,.50) 170deg,
-        rgba(103,229,255,0) 220deg,
-        rgba(255,255,255,0) 360deg
-      );
-      opacity: 0;
-      filter: blur(1px);
-      animation: spin 8s linear infinite;
+      pointer-events:none;
+      opacity:.95;
+      background:
+        radial-gradient(600px 140px at 10% 18%, rgba(103,229,255,.14), transparent 62%),
+        radial-gradient(600px 140px at 90% 82%, rgba(103,229,255,.10), transparent 62%);
+      mix-blend-mode: screen;
+      z-index:1;
     }
-    .card.enabled::before{ opacity: .60; }
-    .card::after{
+    .neonCard.cometOn:before{
       content:"";
-      position:absolute; inset: 1px;
-      background: linear-gradient(180deg, rgba(11,15,18,.92), rgba(11,15,18,.92));
-      border-radius: calc(var(--radius2) - 1px);
-      opacity: .92;
+      position:absolute; inset:-2px;
+      border-radius: inherit;
+      padding: 2px;
+      background:
+        conic-gradient(
+          from 0deg,
+          rgba(103,229,255,0) 0deg,
+          rgba(103,229,255,0) 250deg,
+          rgba(103,229,255,.85) 290deg,
+          rgba(103,229,255,.10) 320deg,
+          rgba(103,229,255,0) 360deg
+        );
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      opacity:.92;
+      filter: drop-shadow(0 0 16px rgba(103,229,255,.20));
+      animation: spinBorder 8s linear infinite;
+      pointer-events:none;
+      z-index:3;
     }
-    .card .inner{
-      position: relative;
-      z-index: 2;
-      padding: 14px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spinBorder{ to{ transform: rotate(360deg); } }
 
-    .timerCard{
-      height: 92px;
-      border-radius: 24px;
-    }
-    .timerRow{
-      display:flex; align-items:center; gap: 12px;
-      height: 100%;
-    }
-    .badge{
-      width: 44px; height: 44px;
-      border-radius: 999px;
-      border: 1px solid rgba(103,229,255,.22);
-      background: radial-gradient(circle at 35% 25%, rgba(103,229,255,.18), rgba(255,255,255,.02));
-      box-shadow: 0 0 0 1px rgba(255,255,255,.05) inset;
-      display:flex; align-items:center; justify-content:center;
-      font-weight: 900;
-    }
-    .timerMeta{ flex: 1; }
-    .timerMeta .label{ font-size: 12px; color: rgba(255,255,255,.72); font-weight: 700; }
-    .timerMeta .time{ font-size: 28px; font-weight: 900; letter-spacing: .6px; }
-    .timerNext{ font-size: 13px; color: rgba(255,255,255,.80); font-weight: 700; white-space: nowrap; }
-
-    .chips{
-      display:flex; gap: 8px;
-      overflow-x: auto;
-      padding: 8px 2px 2px;
-      scrollbar-width: none;
-    }
-    .chips::-webkit-scrollbar{ display:none; }
-    .chip{
-      flex: 0 0 auto;
-      height: 36px;
-      padding: 0 14px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      color: rgba(255,255,255,.78);
-      font-weight: 800;
-      display:flex; align-items:center; justify-content:center;
-      cursor: pointer;
-      user-select: none;
-    }
-    .chip.active{
-      border-color: rgba(103,229,255,.70);
-      background: linear-gradient(180deg, rgba(103,229,255,.14), rgba(255,255,255,.02));
-      color: rgba(255,255,255,.98);
-    }
-    .chip:active{ transform: scale(.99); }
-
-    .list{
+    /* ---------- TIMER ---------- */
+    .timer{
+      height: var(--timerH);
       display:flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .prRow{
-      display:flex; align-items:center;
-      gap: 12px;
-      height: 64px;
-    }
-    .dot{
-      width: 10px; height: 10px; border-radius: 999px;
-      background: rgba(255,255,255,.20);
-      flex: 0 0 auto;
-    }
-    .dot.next{ background: var(--neon); box-shadow: 0 0 0 10px rgba(103,229,255,.08); }
-    .prNames{ flex: 1; min-width: 0; }
-    .prNames .name{ font-size: 16px; font-weight: 800; color: rgba(255,255,255,.65); }
-    .prNames .ar{ font-size: 13px; color: rgba(255,255,255,.32); font-weight: 700; margin-top: 2px; }
-    .prNames .name.next{ color: rgba(255,255,255,.95); }
-    .prNames .ar.next{ color: rgba(255,255,255,.52); }
-
-    .prTime{
-      font-size: 17px;
-      font-weight: 800;
-      color: rgba(255,255,255,.55);
-      letter-spacing: .3px;
-      min-width: 56px;
-      text-align: right;
-    }
-    .prTime.next{ color: rgba(255,255,255,.92); }
-
-    .tinyBtn{
-      width: 28px; height: 28px;
-      border-radius: 999px;
-      border: 1px solid rgba(103,229,255,.22);
-      background: radial-gradient(circle at 35% 25%, rgba(103,229,255,.18), rgba(255,255,255,.02));
-      display:flex; align-items:center; justify-content:center;
-      cursor: pointer;
-      user-select: none;
-      margin-left: 8px;
-      opacity: .92;
-    }
-    .tinyBtn.disabled{ opacity: .28; pointer-events:none; border-color: rgba(255,255,255,.10); }
-    .tinyBtn:active{ transform: scale(.98); }
-    .tinyBtn span{ font-weight: 900; font-size: 14px; }
-
-    /* Drawer */
-    .scrim{
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.60);
-      opacity: 0; pointer-events:none;
-      transition: opacity .18s ease;
-      z-index: 50;
-    }
-    .scrim.on{ opacity: 1; pointer-events:auto; }
-
-    .drawer{
-      position: fixed;
-      top: 0; right: 0;
-      width: min(420px, 86vw);
-      height: 100%;
-      padding: calc(var(--safe-t) + 10px) 12px calc(var(--safe-b) + 12px) 12px;
-      transform: translateX(110%);
-      transition: transform .22s ease;
-      z-index: 60;
-    }
-    .drawer.on{ transform: translateX(0); }
-    .drawerCard{
-      height: 100%;
-      border-radius: 22px;
-      background: rgba(11,15,18,.92);
-      border: 1px solid rgba(255,255,255,.10);
-      box-shadow: var(--shadow);
-      position: relative;
-      overflow: hidden;
-    }
-    .drawerCard::before{
-      content:"";
-      position:absolute; inset:-2px;
-      background: conic-gradient(from 0deg,
-        rgba(103,229,255,0) 0deg,
-        rgba(103,229,255,.92) 40deg,
-        rgba(103,229,255,0) 80deg,
-        rgba(255,255,255,0) 120deg,
-        rgba(103,229,255,.50) 170deg,
-        rgba(103,229,255,0) 220deg,
-        rgba(255,255,255,0) 360deg
-      );
-      opacity: .55;
-      animation: spin 8s linear infinite;
-      filter: blur(1px);
-    }
-    .drawerCard::after{
-      content:"";
-      position:absolute; inset: 1px;
-      border-radius: 21px;
-      background: rgba(11,15,18,.92);
-    }
-    .drawerInner{
-      position: relative; z-index: 2;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
+      align-items:center;
+      gap:12px;
       padding: 14px;
+      position:relative;
+      z-index:2;
     }
 
-    .drawerHeader{
-      display:flex; align-items:center; gap: 8px;
-      margin-bottom: 12px;
+    .badge{
+      width:44px;height:44px;
+      border-radius:999px;
+      display:grid;
+      place-items:center;
+      background: radial-gradient(circle at 30% 30%, rgba(103,229,255,.22), transparent 62%);
+      border:1px solid rgba(103,229,255,.22);
+      box-shadow: 0 0 22px rgba(103,229,255,.12);
+      flex:0 0 auto;
     }
-    .drawerTitleWrap{ flex:1; }
-    .drawerTitle{ font-size: 18px; font-weight: 900; }
-    .drawerSub{ font-size: 11px; font-weight: 800; color: rgba(255,255,255,.35); margin-top: 2px; }
-    .chipBtn{
-      height: 34px;
-      padding: 0 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(103,229,255,.35);
-      background: rgba(103,229,255,.12);
-      color: #fff;
-      font-weight: 900;
-      cursor: pointer;
-      user-select: none;
-      display:flex; align-items:center; justify-content:center;
-      white-space: nowrap;
-    }
-    .chipBtn:active{ transform: scale(.99); }
-    .divider{ height: 1px; background: rgba(255,255,255,.08); margin: 10px 0; }
+    .badge span{ font-size:18px; }
 
-    .sectionTitle{
+    .timer .meta{ flex:1; min-width:0; }
+    .timer .meta .label{
       font-size: 12px;
       font-weight: 800;
-      color: rgba(255,255,255,.35);
-      padding: 6px 4px;
+      color: rgba(255,255,255,.70);
+      margin-bottom: 2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .timer .meta .time{
+      font-size: clamp(24px, 3.8vh, 30px);
+      font-weight: 950;
+      letter-spacing: .5px;
+      line-height: 1.0;
+    }
+    .timer .next{
+      font-size: 13px;
+      font-weight: 900;
+      color: rgba(255,255,255,.78);
+      white-space:nowrap;
+      flex:0 0 auto;
     }
 
-    .item{
-      height: 56px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.035);
-      display:flex; align-items:center;
+    /* ---------- METHODS ROW ---------- */
+    .row{
+      display:flex;
+      gap:8px;
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      overflow-y:hidden;
+      padding: 2px 2px 0 2px;
+      scrollbar-width:none;
+      flex:0 0 auto;
+    }
+    .row::-webkit-scrollbar{ display:none; }
+
+    .chip{
+      height: var(--chipH);
+      display:inline-flex;
+      align-items:center;
       padding: 0 14px;
-      gap: 10px;
-      margin: 6px 0;
-      cursor: pointer;
-      user-select: none;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.03);
+      color: rgba(255,255,255,.80);
+      font-weight: 900;
+      font-size: 12px;
+      cursor:pointer;
+      user-select:none;
+      flex:0 0 auto;
+      white-space:nowrap;
     }
-    .item:active{ transform: scale(.995); }
-    .item .ic{ font-size: 18px; width: 22px; text-align: center; }
-    .item .texts{ flex: 1; min-width: 0; }
-    .item .t{ font-size: 13px; font-weight: 800; color: rgba(255,255,255,.95); }
-    .item .v{ font-size: 11px; font-weight: 800; color: rgba(103,229,255,.72); margin-top: 2px; }
-    .item .arrow{ opacity: .30; font-weight: 900; }
-
-    .drawerBody{
-      overflow: auto;
-      padding-right: 2px;
-      scrollbar-width: none;
-      flex: 1;
+    .chip.active{
+      border-color: rgba(103,229,255,.75);
+      background: rgba(103,229,255,.10);
+      color:#fff;
+      box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset;
     }
-    .drawerBody::-webkit-scrollbar{ display:none; }
 
-    /* Bottom sheet (edit time) */
-    .sheetScrim{
-      position: fixed; inset:0;
-      background: rgba(0,0,0,.55);
-      opacity: 0; pointer-events: none;
-      transition: opacity .18s ease;
-      z-index: 80;
+    /* ---------- PRAYER LIST (без скролла, 5 карточек помещаются) ---------- */
+    .list{
+      flex:1 1 auto;
+      min-height: 0;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between; /* ✅ распределяем 5 карточек по высоте */
+      gap: clamp(8px, 1.35vh, 12px);
+      padding-top: 2px;
+      padding-bottom: 2px;
+      overflow:hidden; /* ✅ без вертикального скролла */
     }
-    .sheetScrim.on{ opacity: 1; pointer-events:auto; }
 
-    .sheet{
-      position: fixed; left: 0; right: 0; bottom: 0;
-      transform: translateY(110%);
-      transition: transform .22s ease;
-      z-index: 90;
-      padding: 12px 12px calc(var(--safe-b) + 12px) 12px;
-    }
-    .sheet.on{ transform: translateY(0); }
-
-    .sheetCard{
-      border-radius: 22px;
-      background: rgba(11,15,18,.92);
+    .prayer{
+      height: var(--prayH);
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding: 12px 14px;
+      border-radius: var(--prayR);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
       border: 1px solid rgba(255,255,255,.10);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      position: relative;
+      position:relative;
+      overflow:hidden;
+      box-shadow: 0 10px 26px rgba(0,0,0,.22);
+      flex:0 0 auto;
     }
-    .sheetCard::before{
+
+    .prayer.next{
+      border-color: rgba(103,229,255,.48);
+      box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset, 0 14px 34px rgba(0,0,0,.35);
+    }
+    .prayer.next:before{
       content:"";
       position:absolute; inset:-2px;
-      background: conic-gradient(from 0deg,
-        rgba(103,229,255,0) 0deg,
-        rgba(103,229,255,.92) 40deg,
-        rgba(103,229,255,0) 80deg,
-        rgba(255,255,255,0) 120deg,
-        rgba(103,229,255,.50) 170deg,
-        rgba(103,229,255,0) 220deg,
-        rgba(255,255,255,0) 360deg
-      );
-      opacity: .55;
-      animation: spin 8s linear infinite;
-      filter: blur(1px);
+      border-radius: inherit;
+      padding: 2px;
+      background:
+        conic-gradient(
+          from 0deg,
+          rgba(103,229,255,0) 0deg,
+          rgba(103,229,255,0) 250deg,
+          rgba(103,229,255,.85) 290deg,
+          rgba(103,229,255,.10) 320deg,
+          rgba(103,229,255,0) 360deg
+        );
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      opacity:.85;
+      filter: drop-shadow(0 0 14px rgba(103,229,255,.18));
+      animation: spinBorder 8s linear infinite;
+      pointer-events:none;
+      z-index:2;
     }
-    .sheetCard::after{
-      content:"";
-      position:absolute; inset:1px;
-      background: rgba(11,15,18,.92);
-      border-radius: 21px;
-    }
-    .sheetInner{
-      position: relative; z-index: 2;
-      padding: 16px;
-    }
-    .sheetHeader{
-      display:flex; align-items:center; gap: 8px;
-      margin-bottom: 12px;
-    }
-    .sheetTitleWrap{ flex: 1; min-width:0; }
-    .sheetTitle{ font-size: 18px; font-weight: 900; }
-    .sheetSub{ font-size: 11px; font-weight: 800; color: rgba(255,255,255,.35); margin-top: 2px; }
 
-    .pickRow{
+    .dot{
+      width: 10px; height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.20);
+      flex:0 0 auto;
+      z-index:3;
+    }
+    .prayer.next .dot{ background: var(--neon); }
+
+    .names{ flex:1; min-width:0; z-index:3; }
+    .names .n1{
+      font-weight: 950;
+      font-size: clamp(15px, 2.25vh, 16px);
+      color: rgba(255,255,255,.92);
+      line-height: 1.05;
+    }
+    .names .n2{
+      font-size: clamp(12px, 1.9vh, 13px);
+      font-weight: 800;
+      color: rgba(255,255,255,.34);
+      margin-top: 3px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .ptime{
+      font-weight: 950;
+      font-size: clamp(16px, 2.35vh, 17px);
+      color: rgba(255,255,255,.86);
+      letter-spacing: .2px;
+      flex:0 0 auto;
+      z-index:3;
+    }
+
+    /* ---------- MODAL (City picker) ---------- */
+    .modalOverlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.65);
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      padding: 12px;
+      padding-bottom: calc(12px + var(--safeBot));
+      z-index:999;
+    }
+    .modalOverlay.show{ display:flex; }
+
+    .modal{
+      width:min(560px, 100%);
+      border-radius: 24px;
+      background: rgba(11,15,18,.98);
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+    .modalHeader{
+      padding: 14px 14px 10px 14px;
       display:flex;
-      gap: 12px;
-      align-items: center;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .modalHeader .h{
+      font-size: 16px;
+      font-weight: 950;
+    }
+    .modalHeader .x{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color:#fff;
+      width: 38px; height: 38px;
+      border-radius: 14px;
+      font-weight: 950;
+      cursor:pointer;
+    }
+    .modalBody{ padding: 0 14px 14px 14px; }
+
+    .langMini{
+      display:flex;
+      gap:6px;
+      margin: 8px 0 10px 0;
+    }
+    .langMini button{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.82);
+      font-weight: 900;
+      font-size: 12px;
+      padding: 10px 10px;
+      border-radius: 14px;
+      cursor:pointer;
+      user-select:none;
+      flex: 0 0 auto;
+    }
+    .langMini button.active{
+      border-color: rgba(103,229,255,.70);
+      box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset;
+      background: rgba(103,229,255,.10);
+      color:#fff;
+    }
+
+    .input{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.03);
+      color:#fff;
+      outline:none;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .hint{
+      margin-top: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      color: rgba(255,255,255,.35);
+      line-height: 1.35;
+    }
+    .results{
+      margin-top: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-height: min(44vh, 360px);
+      overflow:auto;
+      padding-right: 4px;
+    }
+    .item{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      border-radius: 16px;
+      padding: 12px 12px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .item .t1{
+      font-weight: 950;
+      font-size: 13px;
+      color: rgba(255,255,255,.92);
+      margin-bottom: 2px;
+    }
+    .item .t2{
+      font-weight: 800;
+      font-size: 11px;
+      color: rgba(255,255,255,.42);
+      line-height: 1.25;
+    }
+    .item.saved{
+      border-color: rgba(103,229,255,.35);
+      background: rgba(103,229,255,.05);
+    }
+    .rowBtns{
+      display:flex;
+      gap:10px;
       margin-top: 12px;
     }
-    select{
-      width: 100%;
-      height: 46px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.03);
-      color: rgba(255,255,255,.92);
-      font-weight: 900;
-      font-size: 16px;
-      padding: 0 12px;
-      outline: none;
-    }
-    .colon{
-      font-size: 28px;
-      font-weight: 900;
-      color: rgba(255,255,255,.40);
-      transform: translateY(-4px);
-    }
-
-    .btnRow{
-      display:flex;
-      gap: 10px;
-      margin-top: 14px;
-    }
     .btn{
-      height: 50px;
+      appearance:none;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color:#fff;
+      font-weight: 950;
+      padding: 12px 12px;
       border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.05);
-      color: rgba(255,255,255,.90);
-      font-weight: 900;
-      cursor: pointer;
-      user-select: none;
+      cursor:pointer;
       flex: 1;
     }
     .btn.primary{
-      flex: 1.2;
-      border-color: rgba(103,229,255,.40);
-      background: rgba(103,229,255,.15);
-      color: #fff;
+      border-color: rgba(103,229,255,.55);
+      background: rgba(103,229,255,.10);
+      box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset;
     }
-    .btn:active{ transform: scale(.995); }
-    .btn.disabled{ opacity: .30; pointer-events:none; }
 
-    /* RTL support */
-    html[dir="rtl"] .topbar { grid-template-columns: 44px 1fr 44px; }
-    html[dir="rtl"] .drawer{ right: auto; left: 0; transform: translateX(-110%); }
-    html[dir="rtl"] .drawer.on{ transform: translateX(0); }
-    html[dir="rtl"] .city{ letter-spacing: 0; }
-    html[dir="rtl"] .timerRow{ flex-direction: row-reverse; }
-    html[dir="rtl"] .prRow{ flex-direction: row-reverse; }
-    html[dir="rtl"] .prTime{ text-align: left; }
-    html[dir="rtl"] .drawerHeader{ flex-direction: row-reverse; }
-    html[dir="rtl"] .item{ flex-direction: row-reverse; }
-    html[dir="rtl"] .item .texts{ text-align: right; }
+    /* RTL */
+    [dir="rtl"] .header{ direction: rtl; }
+    [dir="rtl"] .timer{ direction: rtl; }
+    [dir="rtl"] .prayer{ direction: rtl; }
+    [dir="rtl"] .names .n2{ opacity:.55; }
+
+    /* ---------- SPLASH ---------- */
+    .splash{
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      background: #06080b;
+      padding: calc(18px + var(--safeTop)) 18px calc(18px + var(--safeBot)) 18px;
+      transition: opacity .28s ease, transform .28s ease;
+    }
+    .splash.hide{
+      opacity: 0;
+      transform: translateY(6px);
+      pointer-events: none;
+    }
+    .splashImg{
+      width: min(420px, 86vw);
+      max-height: min(520px, 60vh);
+      object-fit: contain;
+      border-radius: 18px;
+      box-shadow: 0 18px 70px rgba(0,0,0,.55);
+    }
+    .splashLoader{
+      margin-top: 18px;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 3px solid rgba(255,255,255,.16);
+      border-top-color: rgba(103,229,255,.85);
+      animation: spin .85s linear infinite;
+    }
+    @keyframes spin{ to { transform: rotate(360deg); } }
   </style>
 </head>
 
 <body>
-  <div class="bg"></div>
-  <div class="vignette"></div>
+  <div class="bgMain"></div>
+  <div class="dust"></div>
 
-  <div class="app" id="app">
-    <div class="topbar">
-      <div></div>
-      <div class="city" id="cityTitle">…</div>
-      <div class="iconBtn" id="openDrawer"><span>≡</span></div>
+  <!-- Splash / Zastavka -->
+  <div class="splash" id="splash" aria-hidden="false">
+    <img class="splashImg" src="zastavka.png" alt="PrayerTime Barakat" />
+    <div class="splashLoader" aria-label="Loading"></div>
+  </div>
+
+  <div class="app">
+    <!-- Header: центр город, справа язык (без меню) -->
+    <div class="header">
+      <div class="leftGhost"></div>
+      <div class="cityTitle" id="cityTitle">…</div>
+      <button class="circleBtn" id="langCycleBtn" aria-label="Language">🌐</button>
     </div>
 
-    <div class="card timerCard enabled" id="timerCard">
-      <div class="inner">
-        <div class="timerRow">
-          <div class="badge">⏱</div>
-          <div class="timerMeta">
-            <div class="label" id="lblUntil">…</div>
-            <div class="time" id="remaining">00:00:00</div>
-          </div>
-          <div class="timerNext" id="nextLabel">…</div>
+    <!-- Timer card -->
+    <div class="neonCard cometOn">
+      <div class="timer">
+        <div class="badge"><span>⏱</span></div>
+        <div class="meta">
+          <div class="label" id="untilLabel">…</div>
+          <div class="time" id="remainText">--:--:--</div>
         </div>
+        <div class="next" id="nextText">—</div>
       </div>
     </div>
 
-    <div class="chips" id="methodChips"></div>
-
+    <div class="row" id="methodRow"></div>
     <div class="list" id="prayerList"></div>
   </div>
 
-  <!-- Drawer -->
-  <div class="scrim" id="scrim"></div>
-  <div class="drawer" id="drawer">
-    <div class="drawerCard">
-      <div class="drawerInner">
-        <div class="drawerHeader">
-          <div class="drawerTitleWrap">
-            <div class="drawerTitle" id="menuTitle">Menu</div>
-            <div class="drawerSub" id="menuSub">Settings</div>
-          </div>
-          <div class="chipBtn" id="closeDrawer">Close</div>
+  <!-- City Picker Modal -->
+  <div class="modalOverlay" id="modalOverlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modalHeader">
+        <div>
+          <div class="h" id="modalTitle">—</div>
+          <div class="hint" id="modalSub" style="margin-top:4px">—</div>
         </div>
-
-        <div class="divider"></div>
-
-        <div class="drawerBody">
-          <div class="sectionTitle" id="secApp">App</div>
-
-          <div class="item" id="itemLang">
-            <div class="ic">🌐</div>
-            <div class="texts">
-              <div class="t" id="langTitle">Language</div>
-              <div class="v" id="langValue">…</div>
-            </div>
-            <div class="arrow">›</div>
-          </div>
-
-          <div class="item" id="itemGeo">
-            <div class="ic">📍</div>
-            <div class="texts">
-              <div class="t" id="geoTitle">Location</div>
-              <div class="v" id="geoValue">…</div>
-            </div>
-            <div class="arrow">›</div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="sectionTitle" id="secSupport">Support</div>
-
-          <div class="item" id="itemReload">
-            <div class="ic">↻</div>
-            <div class="texts">
-              <div class="t" id="reloadTitle">Reload times</div>
-              <div class="v" id="reloadValue">Fetch again</div>
-            </div>
-            <div class="arrow">›</div>
-          </div>
-
-          <div class="item" id="itemCloseMini">
-            <div class="ic">✖</div>
-            <div class="texts">
-              <div class="t" id="closeMiniTitle">Close</div>
-              <div class="v" id="closeMiniValue">Exit Mini App</div>
-            </div>
-            <div class="arrow">›</div>
-          </div>
-
-          <div style="height:18px;"></div>
-          <div style="text-align:center;font-size:12px;font-weight:800;color:rgba(255,255,255,.22)" id="versionText">
-            v1.0.0
-          </div>
-        </div>
+        <button class="x" id="modalClose">✕</button>
       </div>
-    </div>
-  </div>
 
-  <!-- Bottom sheet -->
-  <div class="sheetScrim" id="sheetScrim"></div>
-  <div class="sheet" id="sheet">
-    <div class="sheetCard">
-      <div class="sheetInner">
-        <div class="sheetHeader">
-          <div class="sheetTitleWrap">
-            <div class="sheetTitle" id="editTitle">Adjust time</div>
-            <div class="sheetSub" id="editSub">Set custom time</div>
-          </div>
-          <div class="chipBtn" id="closeSheet">Close</div>
+      <div class="modalBody">
+        <!-- язык внутри модалки тоже (чтобы было удобно) -->
+        <div class="langMini" aria-label="Language">
+          <button id="langRu">RU</button>
+          <button id="langEn">EN</button>
+          <button id="langAr">AR</button>
         </div>
 
-        <div class="divider"></div>
+        <input class="input" id="cityInput" placeholder="..." autocomplete="off" />
+        <div class="hint" id="modalHint">—</div>
 
-        <div class="pickRow">
-          <div style="flex:1">
-            <select id="pickHour"></select>
-          </div>
-          <div class="colon">:</div>
-          <div style="flex:1">
-            <select id="pickMinute"></select>
-          </div>
-        </div>
+        <div class="results" id="results"></div>
 
-        <div class="btnRow">
-          <button class="btn" id="btnReset">Reset</button>
-          <button class="btn primary" id="btnSave">Save</button>
+        <div class="rowBtns">
+          <button class="btn" id="btnClearSaved">🗑</button>
+          <button class="btn primary" id="btnGeoInModal">📡</button>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // -----------------------------
-    // Telegram setup (safe)
-    // -----------------------------
-    const tg = window.Telegram?.WebApp;
-    try {
-      tg?.ready();
-      tg?.expand();
-      tg?.setHeaderColor?.("#000000");
-      tg?.setBackgroundColor?.("#06080b");
-    } catch (_) {}
+(() => {
+  // ---------------------------
+  // Telegram init (safe)
+  // ---------------------------
+  const tg = window.Telegram?.WebApp;
+  try {
+    tg?.ready?.();
+    tg?.expand?.();
+    tg?.setHeaderColor?.('#06080b');
+    tg?.setBackgroundColor?.('#06080b');
+  } catch(_) {}
 
-    // -----------------------------
-    // Storage keys (like Kotlin prefs)
-    // -----------------------------
-    const SP = {
-      LANG: "app_lang_tag",        // "" | "ru" | "en" | "ar"...
-      METHOD: "method",            // ISNA | MWL | UMM_AL_QURA | EGYPT | MOONSIGHTING
-      CITY: "city",
-      COUNTRY: "country",
-      LAT: "lat",
-      LON: "lon",
-      OVERRIDES: "override_times"  // { Fajr:"06:35", ... }
-    };
+  // ---------------------------
+  // i18n
+  // ---------------------------
+  const i18n = {
+    ru: {
+      city_detecting: "Определяем город…",
+      city_pick: "Выбор города",
+      city_pick_sub: "Страна и город — с подсказками",
+      city_pick_hint: "Начните вводить: “Berlin”, “Dubai”, “Москва”… Выберите подсказку. Можно сохранить несколько городов.",
+      clear_saved: "Очистить",
+      use_geo: "Определить по геолокации",
+      until_next: "До следующей молитвы",
+      until_fmt: (name) => `до ${name}`,
+      status_ok: "Обновлено",
+      status_loading: "Загрузка…",
+      status_err: "Не удалось обновить",
+      fajr: "Fajr",
+      dhuhr: "Dhuhr",
+      asr: "Asr",
+      maghrib: "Maghrib",
+      isha: "Isha",
+      saved: "Сохранённые",
+      search_results: "Результаты",
+      tap_choose: "Нажмите, чтобы выбрать город",
+      lang_changed: "Язык изменён",
+    },
+    en: {
+      city_detecting: "Detecting city…",
+      city_pick: "Choose city",
+      city_pick_sub: "Country & city with suggestions",
+      city_pick_hint: "Start typing: “Berlin”, “Dubai”, “Moscow”… Pick a suggestion. You can save multiple cities.",
+      clear_saved: "Clear",
+      use_geo: "Use geolocation",
+      until_next: "Until next prayer",
+      until_fmt: (name) => `to ${name}`,
+      status_ok: "Updated",
+      status_loading: "Loading…",
+      status_err: "Update failed",
+      fajr: "Fajr",
+      dhuhr: "Dhuhr",
+      asr: "Asr",
+      maghrib: "Maghrib",
+      isha: "Isha",
+      saved: "Saved",
+      search_results: "Results",
+      tap_choose: "Tap to choose city",
+      lang_changed: "Language changed",
+    },
+    ar: {
+      city_detecting: "جارٍ تحديد المدينة…",
+      city_pick: "اختيار المدينة",
+      city_pick_sub: "الدولة والمدينة مع اقتراحات",
+      city_pick_hint: "ابدأ الكتابة: “Berlin”, “Dubai”… اختر من الاقتراحات. يمكنك حفظ عدة مدن.",
+      clear_saved: "مسح",
+      use_geo: "استخدام الموقع",
+      until_next: "الوقت حتى الصلاة التالية",
+      until_fmt: (name) => `حتى ${name}`,
+      status_ok: "تم التحديث",
+      status_loading: "جارٍ التحميل…",
+      status_err: "فشل التحديث",
+      fajr: "الفجر",
+      dhuhr: "الظهر",
+      asr: "العصر",
+      maghrib: "المغرب",
+      isha: "العشاء",
+      saved: "محفوظ",
+      search_results: "النتائج",
+      tap_choose: "اضغط لاختيار المدينة",
+      lang_changed: "تم تغيير اللغة",
+    },
+  };
 
-    // -----------------------------
-    // Methods mapping (same IDs as your Kotlin)
-    // -----------------------------
-    const METHODS = [
-      { key:"ISNA",         title:"ISNA",          id:2 },
-      { key:"MWL",          title:"MWL",           id:3 },
-      { key:"UMM_AL_QURA",  title:"Umm al-Qura",   id:4 },
-      { key:"EGYPT",        title:"Egypt",         id:5 },
-      { key:"MOONSIGHTING", title:"Moonsighting",  id:15 }
-    ];
+  const PRAYERS = [
+    { key:"Fajr",    ar:"الفجر",    nameKey:"fajr" },
+    { key:"Dhuhr",   ar:"الظهر",    nameKey:"dhuhr" },
+    { key:"Asr",     ar:"العصر",    nameKey:"asr" },
+    { key:"Maghrib", ar:"المغرب",   nameKey:"maghrib" },
+    { key:"Isha",    ar:"العشاء",   nameKey:"isha" },
+  ];
 
-    const PRAYERS = [
-      { key:"Fajr",    name:"Fajr",    ar:"الفجر" },
-      { key:"Dhuhr",   name:"Dhuhr",   ar:"الظهر" },
-      { key:"Asr",     name:"Asr",     ar:"العصر" },
-      { key:"Maghrib", name:"Maghrib", ar:"المغرب" },
-      { key:"Isha",    name:"Isha",    ar:"العشاء" }
-    ];
+  const METHODS = [
+    { id: 2,  code:"ISNA",         title:"ISNA" },
+    { id: 3,  code:"MWL",          title:"MWL" },
+    { id: 4,  code:"UMM_AL_QURA",  title:"Umm al-Qura" },
+    { id: 5,  code:"EGYPT",        title:"Egypt" },
+    { id: 15, code:"MOONSIGHTING", title:"Moonsighting" },
+  ];
 
-    // -----------------------------
-    // i18n
-    // -----------------------------
-    const I18N = {
-      ru: {
-        city_detecting: "Определяем город…",
-        until_next: "До следующей молитвы",
-        until_format: (name)=>`До: ${name}`,
-        menu_title: "Меню",
-        menu_sub: "Настройки",
-        sec_app: "Приложение",
-        lang_title: "Язык",
-        geo_title: "Геолокация",
-        sec_support: "Поддержка",
-        reload_title: "Обновить времена",
-        reload_value: "Загрузить заново",
-        close_title: "Закрыть",
-        close_value: "Выйти из мини-аппа",
-        edit_title: (p)=>`Изменить: ${p}`,
-        edit_sub: "Установите своё время",
-        reset: "Сброс",
-        save: "Сохранить",
-        lang_system: "Системный",
-        lang_ru: "Русский",
-        lang_en: "English",
-        lang_ar: "العربية",
-        geo_value: (s)=>s,
-        errors_geo: "Нет доступа к геолокации",
-      },
-      en: {
-        city_detecting: "Detecting city…",
-        until_next: "Until next prayer",
-        until_format: (name)=>`Until: ${name}`,
-        menu_title: "Menu",
-        menu_sub: "Settings",
-        sec_app: "App",
-        lang_title: "Language",
-        geo_title: "Location",
-        sec_support: "Support",
-        reload_title: "Reload times",
-        reload_value: "Fetch again",
-        close_title: "Close",
-        close_value: "Exit Mini App",
-        edit_title: (p)=>`Adjust: ${p}`,
-        edit_sub: "Set custom time",
-        reset: "Reset",
-        save: "Save",
-        lang_system: "System",
-        lang_ru: "Русский",
-        lang_en: "English",
-        lang_ar: "العربية",
-        geo_value: (s)=>s,
-        errors_geo: "Location permission denied",
-      },
-      ar: {
-        city_detecting: "جارٍ تحديد المدينة…",
-        until_next: "الوقت المتبقي للصلاة القادمة",
-        until_format: (name)=>`حتى: ${name}`,
-        menu_title: "القائمة",
-        menu_sub: "الإعدادات",
-        sec_app: "التطبيق",
-        lang_title: "اللغة",
-        geo_title: "الموقع",
-        sec_support: "الدعم",
-        reload_title: "تحديث الأوقات",
-        reload_value: "إعادة التحميل",
-        close_title: "إغلاق",
-        close_value: "الخروج من التطبيق المصغّر",
-        edit_title: (p)=>`تعديل: ${p}`,
-        edit_sub: "حدد وقتاً مخصصاً",
-        reset: "إعادة ضبط",
-        save: "حفظ",
-        lang_system: "النظام",
-        lang_ru: "Русский",
-        lang_en: "English",
-        lang_ar: "العربية",
-        geo_value: (s)=>s,
-        errors_geo: "تم رفض إذن الموقع",
-      }
-    };
+  // ---------------------------
+  // storage helpers
+  // ---------------------------
+  const S = {
+    get lang(){ return localStorage.getItem("pt_lang") || "ru"; },
+    set lang(v){ localStorage.setItem("pt_lang", v); },
+    get method(){ return localStorage.getItem("pt_method") || "UMM_AL_QURA"; },
+    set method(v){ localStorage.setItem("pt_method", v); },
+    get city(){
+      try { return JSON.parse(localStorage.getItem("pt_city") || "null"); } catch(_) { return null; }
+    },
+    set city(v){ localStorage.setItem("pt_city", JSON.stringify(v)); },
+    get savedCities(){
+      try { return JSON.parse(localStorage.getItem("pt_saved") || "[]"); } catch(_) { return []; }
+    },
+    set savedCities(v){ localStorage.setItem("pt_saved", JSON.stringify(v)); },
+  };
 
-    function lsGet(k, def=null){
-      const v = localStorage.getItem(k);
-      return (v === null || v === undefined) ? def : v;
-    }
-    function lsSet(k, v){
-      if (v === undefined || v === null) localStorage.removeItem(k);
-      else localStorage.setItem(k, String(v));
-    }
+  // ---------------------------
+  // DOM
+  // ---------------------------
+  const splash     = document.getElementById("splash");
 
-    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
-    function pad2(n){ return String(n).padStart(2,"0"); }
+  const cityTitleEl = document.getElementById("cityTitle");
+  const langCycleBtn = document.getElementById("langCycleBtn");
 
-    function parseHHMM(s){
-      if (!s || typeof s !== "string") return null;
-      const m = s.match(/^(\d{1,2}):(\d{2})/);
-      if (!m) return null;
-      return { h: clamp(+m[1],0,23), m: clamp(+m[2],0,59) };
-    }
-    function fmtHHMM(h,m){ return `${pad2(h)}:${pad2(m)}`; }
+  const untilLabel = document.getElementById("untilLabel");
+  const remainText = document.getElementById("remainText");
+  const nextText   = document.getElementById("nextText");
 
-    function nowLocal(){
-      const d = new Date();
-      return { h: d.getHours(), m: d.getMinutes(), s: d.getSeconds() };
-    }
-    function secondsSinceMidnight(t){ return t.h*3600 + t.m*60 + (t.s||0); }
+  const methodRow  = document.getElementById("methodRow");
+  const prayerList = document.getElementById("prayerList");
 
-    // -----------------------------
-    // App state
-    // -----------------------------
-    const state = {
-      lang: "ru",
-      method: "UMM_AL_QURA",
-      coords: null,     // {lat, lon}
-      city: "",
-      country: "",
-      baseTimes: {},    // {Fajr:"06:35", ...}
-      overrides: {},    // {Fajr:"06:40", ...}
-      shownTimes: {},   // merged
-      next: null,       // {key,name,ar,timeHHMM,sec}
-      editingKey: null
-    };
+  // modal
+  const modalOverlay = document.getElementById("modalOverlay");
+  const modalTitle   = document.getElementById("modalTitle");
+  const modalSub     = document.getElementById("modalSub");
+  const modalHint    = document.getElementById("modalHint");
+  const modalClose   = document.getElementById("modalClose");
+  const cityInput    = document.getElementById("cityInput");
+  const resultsEl    = document.getElementById("results");
+  const btnClearSaved= document.getElementById("btnClearSaved");
+  const btnGeoInModal= document.getElementById("btnGeoInModal");
 
-    // -----------------------------
-    // DOM
-    // -----------------------------
-    const elCity = document.getElementById("cityTitle");
-    const elChips = document.getElementById("methodChips");
-    const elList = document.getElementById("prayerList");
-    const elRemaining = document.getElementById("remaining");
-    const elNextLabel = document.getElementById("nextLabel");
-    const elLblUntil = document.getElementById("lblUntil");
+  const langRu = document.getElementById("langRu");
+  const langEn = document.getElementById("langEn");
+  const langAr = document.getElementById("langAr");
 
-    const elScrim = document.getElementById("scrim");
-    const elDrawer = document.getElementById("drawer");
-    const btnOpenDrawer = document.getElementById("openDrawer");
-    const btnCloseDrawer = document.getElementById("closeDrawer");
+  // ---------------------------
+  // state
+  // ---------------------------
+  let lang = S.lang;
+  let method = S.method;
+  let city = S.city; // {name, display, lat, lon}
+  let timings = null; // {Fajr:"HH:MM", ...}
+  let timerTick = null;
 
-    const elMenuTitle = document.getElementById("menuTitle");
-    const elMenuSub = document.getElementById("menuSub");
-    const elSecApp = document.getElementById("secApp");
-    const elLangTitle = document.getElementById("langTitle");
-    const elLangValue = document.getElementById("langValue");
-    const elGeoTitle = document.getElementById("geoTitle");
-    const elGeoValue = document.getElementById("geoValue");
-    const elSecSupport = document.getElementById("secSupport");
-    const elReloadTitle = document.getElementById("reloadTitle");
-    const elReloadValue = document.getElementById("reloadValue");
-    const elCloseMiniTitle = document.getElementById("closeMiniTitle");
-    const elCloseMiniValue = document.getElementById("closeMiniValue");
+  // ---------------------------
+  // Splash helpers
+  // ---------------------------
+  function showSplash(){
+    if (!splash) return;
+    splash.classList.remove("hide");
+    splash.setAttribute("aria-hidden", "false");
+  }
+  function hideSplash(){
+    if (!splash) return;
+    splash.classList.add("hide");
+    splash.setAttribute("aria-hidden", "true");
+  }
 
-    const itemLang = document.getElementById("itemLang");
-    const itemGeo = document.getElementById("itemGeo");
-    const itemReload = document.getElementById("itemReload");
-    const itemCloseMini = document.getElementById("itemCloseMini");
+  // ---------------------------
+  // UI helpers
+  // ---------------------------
+  function t(key, ...args){
+    const d = i18n[lang] || i18n.ru;
+    const v = d[key];
+    return typeof v === "function" ? v(...args) : (v ?? key);
+  }
 
-    const elSheetScrim = document.getElementById("sheetScrim");
-    const elSheet = document.getElementById("sheet");
-    const btnCloseSheet = document.getElementById("closeSheet");
-    const elEditTitle = document.getElementById("editTitle");
-    const elEditSub = document.getElementById("editSub");
-    const pickHour = document.getElementById("pickHour");
-    const pickMinute = document.getElementById("pickMinute");
-    const btnReset = document.getElementById("btnReset");
-    const btnSave = document.getElementById("btnSave");
+  function setDirByLang(){
+    document.documentElement.lang = lang;
+    document.documentElement.dir = (lang === "ar") ? "rtl" : "ltr";
+  }
 
-    // -----------------------------
-    // UI helpers
-    // -----------------------------
-    function t(){
-      return I18N[state.lang] || I18N.ru;
-    }
+  function setLangButtons(){
+    if (!langRu) return;
+    langRu.classList.toggle("active", lang==="ru");
+    langEn.classList.toggle("active", lang==="en");
+    langAr.classList.toggle("active", lang==="ar");
+  }
 
-    function applyLangUI(){
-      const L = t();
-      elLblUntil.textContent = L.until_next;
+  function fmt2(n){ return String(n).padStart(2,"0"); }
 
-      elMenuTitle.textContent = L.menu_title;
-      elMenuSub.textContent = L.menu_sub;
-      elSecApp.textContent = L.sec_app;
-      elLangTitle.textContent = L.lang_title;
-      elGeoTitle.textContent = L.geo_title;
-      elSecSupport.textContent = L.sec_support;
-      elReloadTitle.textContent = L.reload_title;
-      elReloadValue.textContent = L.reload_value;
-      elCloseMiniTitle.textContent = L.close_title;
-      elCloseMiniValue.textContent = L.close_value;
+  function parseHHMM(hhmm){
+    const [h,m] = hhmm.split(":").map(x => parseInt(x,10));
+    return {h, m};
+  }
 
-      // RTL toggle
-      if (state.lang === "ar") {
-        document.documentElement.setAttribute("dir","rtl");
-        document.documentElement.setAttribute("lang","ar");
-      } else {
-        document.documentElement.setAttribute("dir","ltr");
-        document.documentElement.setAttribute("lang", state.lang);
-      }
+  function msUntilNextPrayer(now, list){
+    const future = list.find(x => x.at.getTime() > now.getTime());
+    if (future) return { next: future, ms: future.at.getTime() - now.getTime() };
 
-      // Drawer lang value
-      elLangValue.textContent = currentLanguageLabel();
-    }
+    const first = list[0];
+    const tomorrow = new Date(first.at.getTime());
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return { next: {...first, at: tomorrow}, ms: tomorrow.getTime() - now.getTime() };
+  }
 
-    function currentLanguageLabel(){
-      const L = t();
-      const tag = lsGet(SP.LANG,"");
-      if (!tag) return L.lang_system;
-      if (tag === "ru") return L.lang_ru;
-      if (tag === "en") return L.lang_en;
-      if (tag === "ar") return L.lang_ar;
-      return L.lang_system;
-    }
+  function buildPrayerItems(){
+    if (!timings) return [];
+    const today = new Date();
+    const base = PRAYERS.map(p => {
+      const v = timings[p.key];
+      const {h,m} = parseHHMM(v);
+      const at = new Date(today.getFullYear(), today.getMonth(), today.getDate(), h, m, 0, 0);
+      const name = t(p.nameKey);
+      return { key:p.key, name, ar:p.ar, time:v, at };
+    });
+    base.sort((a,b) => a.at - b.at);
+    return base;
+  }
 
-    function openDrawer(){
-      elScrim.classList.add("on");
-      elDrawer.classList.add("on");
-    }
-    function closeDrawer(){
-      elScrim.classList.remove("on");
-      elDrawer.classList.remove("on");
-    }
-
-    function openSheet(){
-      elSheetScrim.classList.add("on");
-      elSheet.classList.add("on");
-    }
-    function closeSheet(){
-      elSheetScrim.classList.remove("on");
-      elSheet.classList.remove("on");
-      state.editingKey = null;
-    }
-
-    function buildHourMinuteOptions(){
-      pickHour.innerHTML = "";
-      pickMinute.innerHTML = "";
-      for (let h=0; h<24; h++){
-        const opt = document.createElement("option");
-        opt.value = String(h);
-        opt.textContent = pad2(h);
-        pickHour.appendChild(opt);
-      }
-      for (let m=0; m<60; m++){
-        const opt = document.createElement("option");
-        opt.value = String(m);
-        opt.textContent = pad2(m);
-        pickMinute.appendChild(opt);
-      }
-    }
-
-    function renderChips(){
-      elChips.innerHTML = "";
-      METHODS.forEach(m=>{
-        const chip = document.createElement("div");
-        chip.className = "chip" + (state.method === m.key ? " active" : "");
-        chip.textContent = m.title;
-        chip.addEventListener("click", async ()=>{
-          state.method = m.key;
-          lsSet(SP.METHOD, m.key);
-          renderChips();
-          await refreshTimes();
-        });
-        elChips.appendChild(chip);
-      });
-    }
-
-    function renderList(){
-      elList.innerHTML = "";
-      const nextKey = state.next?.key;
-
-      PRAYERS.forEach(p=>{
-        const isNext = nextKey === p.key;
-        const time = state.shownTimes[p.key] || "--:--";
-        const card = document.createElement("div");
-        card.className = "card" + (isNext ? " enabled" : "");
-        const inner = document.createElement("div");
-        inner.className = "inner";
-
-        const row = document.createElement("div");
-        row.className = "prRow";
-
-        const dot = document.createElement("div");
-        dot.className = "dot" + (isNext ? " next" : "");
-        row.appendChild(dot);
-
-        const names = document.createElement("div");
-        names.className = "prNames";
-        const name = document.createElement("div");
-        name.className = "name" + (isNext ? " next" : "");
-        name.textContent = p.name;
-        const ar = document.createElement("div");
-        ar.className = "ar" + (isNext ? " next" : "");
-        ar.textContent = p.ar;
-        names.appendChild(name);
-        names.appendChild(ar);
-        row.appendChild(names);
-
-        const timeEl = document.createElement("div");
-        timeEl.className = "prTime" + (isNext ? " next" : "");
-        timeEl.textContent = time;
-        row.appendChild(timeEl);
-
-        // edit button
-        const bEdit = document.createElement("div");
-        bEdit.className = "tinyBtn";
-        bEdit.innerHTML = "<span>✎</span>";
-        bEdit.addEventListener("click", ()=>{
-          openEdit(p.key);
-        });
-        row.appendChild(bEdit);
-
-        // reset button (only if override exists)
-        const hasOv = !!state.overrides[p.key];
-        const bReset = document.createElement("div");
-        bReset.className = "tinyBtn" + (hasOv ? "" : " disabled");
-        bReset.innerHTML = "<span>↺</span>";
-        bReset.addEventListener("click", ()=>{
-          if (!hasOv) return;
-          delete state.overrides[p.key];
-          saveOverrides();
-          recomputeShown();
-          renderList();
-        });
-        row.appendChild(bReset);
-
-        inner.appendChild(row);
-        card.appendChild(inner);
-        elList.appendChild(card);
-      });
-    }
-
-    function openEdit(prayerKey){
-      const p = PRAYERS.find(x=>x.key===prayerKey);
-      if (!p) return;
-
-      state.editingKey = prayerKey;
-      const L = t();
-      elEditTitle.textContent = L.edit_title(p.name);
-      elEditSub.textContent = L.edit_sub;
-
-      const time = state.shownTimes[prayerKey] || state.baseTimes[prayerKey] || "00:00";
-      const parsed = parseHHMM(time) || {h:0,m:0};
-      pickHour.value = String(parsed.h);
-      pickMinute.value = String(parsed.m);
-
-      btnReset.textContent = L.reset;
-      btnSave.textContent = L.save;
-
-      // enable reset only if override exists
-      const hasOv = !!state.overrides[prayerKey];
-      btnReset.classList.toggle("disabled", !hasOv);
-
-      openSheet();
-    }
-
-    function saveOverrides(){
-      lsSet(SP.OVERRIDES, JSON.stringify(state.overrides || {}));
-    }
-
-    function loadOverrides(){
-      const raw = lsGet(SP.OVERRIDES, "{}");
-      try {
-        const obj = JSON.parse(raw);
-        state.overrides = (obj && typeof obj === "object") ? obj : {};
-      } catch {
-        state.overrides = {};
-      }
-    }
-
-    function recomputeShown(){
-      // merge base + overrides
-      const out = {};
-      for (const p of PRAYERS){
-        out[p.key] = state.overrides[p.key] || state.baseTimes[p.key] || "--:--";
-      }
-      state.shownTimes = out;
-      computeNext();
-      renderTimer();
-    }
-
-    function computeNext(){
-      // find next prayer by current time
-      const now = nowLocal();
-      const nowSec = secondsSinceMidnight(now);
-
-      const list = PRAYERS.map(p=>{
-        const hhmm = state.shownTimes[p.key];
-        const tm = parseHHMM(hhmm);
-        if (!tm) return null;
-        return {
-          key: p.key,
-          name: p.name,
-          ar: p.ar,
-          hhmm,
-          sec: tm.h*3600 + tm.m*60
-        };
-      }).filter(Boolean);
-
-      if (list.length === 0){
-        state.next = null;
-        return;
-      }
-
-      let next = list.find(x=>x.sec > nowSec);
-      if (!next) next = list[0]; // next day
-      state.next = next;
-    }
-
-    function renderTimer(){
-      const L = t();
-      if (!state.next){
-        elRemaining.textContent = "00:00:00";
-        elNextLabel.textContent = "";
-        return;
-      }
-      elLblUntil.textContent = L.until_next;
-      elNextLabel.textContent = L.until_format(state.next.name);
-    }
-
-    function tick(){
-      // update remaining every second
-      const now = nowLocal();
-      const nowSec = secondsSinceMidnight(now);
-
-      if (!state.next){
-        elRemaining.textContent = "00:00:00";
-        return;
-      }
-      let target = state.next.sec;
-      // if next is earlier than now -> tomorrow
-      if (target <= nowSec) target += 24*3600;
-
-      const diff = target - nowSec;
-      const hh = Math.floor(diff/3600);
-      const mm = Math.floor((diff%3600)/60);
-      const ss = diff%60;
-      elRemaining.textContent = `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
-
-      // when pass exact time -> recompute next
-      if (diff <= 0) {
-        computeNext();
-        renderTimer();
-        renderList();
-      }
-    }
-
-    // -----------------------------
-    // Location + reverse geocode (web alternative to Android Geocoder)
-    // -----------------------------
-    async function getLocation(){
-      return new Promise((resolve)=>{
-        if (!navigator.geolocation) return resolve(null);
-        navigator.geolocation.getCurrentPosition(
-          (pos)=> resolve({lat: pos.coords.latitude, lon: pos.coords.longitude}),
-          ()=> resolve(null),
-          { enableHighAccuracy:false, timeout: 8000, maximumAge: 60_000 }
-        );
-      });
-    }
-
-    async function reverseCityCountry(lat, lon){
-      // Use Nominatim (OSM) for city name
-      try {
-        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
-        const r = await fetch(url, { headers: { "Accept":"application/json" } });
-        if (!r.ok) throw new Error("reverse failed");
-        const j = await r.json();
-        const a = j.address || {};
-        const city = a.city || a.town || a.village || a.county || a.state || "";
-        const country = a.country || "";
-        return {city, country};
-      } catch {
-        return {city:"", country:""};
-      }
-    }
-
-    // -----------------------------
-    // Prayer times fetch (AlAdhan, same as Kotlin)
-    // -----------------------------
-    async function fetchPrayerTimes(methodKey, lat, lon){
-      const m = METHODS.find(x=>x.key===methodKey) || METHODS[2];
-      const url = `https://api.aladhan.com/v1/timings?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&method=${m.id}`;
-      const r = await fetch(url);
-      if (!r.ok) throw new Error("timings http " + r.status);
-      const j = await r.json();
-      const timings = j?.data?.timings;
-      if (!timings) throw new Error("no timings");
-
-      function take5(s){ return String(s||"").slice(0,5); }
-      return {
-        Fajr: take5(timings.Fajr),
-        Dhuhr: take5(timings.Dhuhr),
-        Asr: take5(timings.Asr),
-        Maghrib: take5(timings.Maghrib),
-        Isha: take5(timings.Isha),
+  function renderMethods(){
+    methodRow.innerHTML = "";
+    METHODS.forEach(m => {
+      const b = document.createElement("button");
+      b.className = "chip" + (m.code === method ? " active" : "");
+      b.textContent = m.title;
+      b.onclick = async () => {
+        method = m.code;
+        S.method = method;
+        renderMethods();
+        await refreshTimings();
       };
+      methodRow.appendChild(b);
+    });
+  }
+
+  function renderPrayers(){
+    prayerList.innerHTML = "";
+    if (!timings) return;
+
+    const items = buildPrayerItems();
+    const now = new Date();
+    const { next } = msUntilNextPrayer(now, items);
+
+    items.forEach(p => {
+      const row = document.createElement("div");
+      row.className = "prayer" + (p.key === next.key ? " next" : "");
+      row.innerHTML = `
+        <div class="dot"></div>
+        <div class="names">
+          <div class="n1">${escapeHtml(p.name)}</div>
+          <div class="n2">${escapeHtml(p.ar)}</div>
+        </div>
+        <div class="ptime">${escapeHtml(p.time)}</div>
+      `;
+      prayerList.appendChild(row);
+    });
+  }
+
+  function renderTimer(){
+    if (!timings) {
+      remainText.textContent = "--:--:--";
+      nextText.textContent = "—";
+      untilLabel.textContent = "…";
+      return;
     }
 
-    // Fallback times (same idea as TimeUtils.timesFor)
-    function fallbackTimes(methodKey){
-      // base
-      const base = { Fajr:"06:35", Dhuhr:"12:30", Asr:"13:47", Maghrib:"16:00", Isha:"17:30" };
-      const shift = ({
-        ISNA:0, MWL:2, UMM_AL_QURA:4, EGYPT:3, MOONSIGHTING:1
-      })[methodKey] ?? 0;
+    const items = buildPrayerItems();
+    const now = new Date();
+    const { next, ms } = msUntilNextPrayer(now, items);
 
-      const out = {};
-      for (const k of Object.keys(base)){
-        const tm = parseHHMM(base[k]);
-        let mins = tm.h*60 + tm.m + shift;
-        mins = (mins + 24*60) % (24*60);
-        out[k] = fmtHHMM(Math.floor(mins/60), mins%60);
+    const totalSec = Math.max(0, Math.floor(ms/1000));
+    const hh = Math.floor(totalSec/3600);
+    const mm = Math.floor((totalSec%3600)/60);
+    const ss = totalSec%60;
+
+    untilLabel.textContent = t("until_next");
+    remainText.textContent = `${fmt2(hh)}:${fmt2(mm)}:${fmt2(ss)}`;
+    nextText.textContent = t “until_fmt”, next.name;
+
+    // подсветка next в списке
+    const cards = prayerList.querySelectorAll(".prayer");
+    cards.forEach(el => el.classList.remove("next"));
+    const idx = items.findIndex(x => x.key === next.key);
+    if (idx >= 0 && cards[idx]) cards[idx].classList.add("next");
+  }
+
+  function renderCityTitle(){
+    if (!city) {
+      cityTitleEl.textContent = t("city_detecting");
+      return;
+    }
+    cityTitleEl.textContent = city.name || (city.display ? String(city.display).split(",")[0] : "—") || "—";
+  }
+
+  function escapeHtml(s){
+    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  // ---------------------------
+  // City search (Nominatim)
+  // ---------------------------
+  let searchAbort = null;
+  async function nominatimSearch(q){
+    if (!q || q.trim().length < 2) return [];
+    if (searchAbort) searchAbort.abort();
+    searchAbort = new AbortController();
+
+    const url = "https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&q=" + encodeURIComponent(q.trim());
+    const res = await fetch(url, {
+      signal: searchAbort.signal,
+      headers: { "Accept": "application/json" }
+    });
+    if (!res.ok) throw new Error("geocode failed");
+    const arr = await res.json();
+
+    return arr.map(x => {
+      const lat = parseFloat(x.lat);
+      const lon = parseFloat(x.lon);
+      const display = x.display_name || "";
+      const cityName =
+        x.address?.city || x.address?.town || x.address?.village || x.address?.municipality ||
+        (display.split(",")[0] || "").trim();
+
+      const country = x.address?.country || "";
+      const short = [cityName, country].filter(Boolean).join(", ");
+      return { name: short || cityName || display.split(",")[0], display, lat, lon };
+    });
+  }
+
+  function openModal(){
+    modalTitle.textContent = t("city_pick");
+    modalSub.textContent = t("city_pick_sub");
+    modalHint.textContent = t("city_pick_hint");
+    btnClearSaved.textContent = "🗑 " + t("clear_saved");
+    btnGeoInModal.textContent = "📡 " + t("use_geo");
+
+    cityInput.value = "";
+    resultsEl.innerHTML = "";
+    renderSavedCitiesIntoResults();
+    modalOverlay.classList.add("show");
+
+    setTimeout(() => cityInput.focus(), 50);
+    try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch(_) {}
+  }
+
+  function closeModal(){
+    modalOverlay.classList.remove("show");
+  }
+
+  function renderSavedCitiesIntoResults(){
+    const saved = S.savedCities;
+    if (!saved.length) return;
+
+    const sep = document.createElement("div");
+    sep.className = "hint";
+    sep.style.margin = "6px 2px 2px 2px";
+    sep.textContent = t("saved");
+    resultsEl.appendChild(sep);
+
+    saved.slice(0, 10).forEach(item => {
+      const el = document.createElement("div");
+      el.className = "item saved";
+      el.innerHTML = `<div class="t1">${escapeHtml(item.name)}</div><div class="t2">${escapeHtml(item.display || "")}</div>`;
+      el.onclick = async () => { await pickCity(item, true); closeModal(); };
+      resultsEl.appendChild(el);
+    });
+  }
+
+  function renderSearchResults(list){
+    resultsEl.innerHTML = "";
+    renderSavedCitiesIntoResults();
+
+    const sep = document.createElement("div");
+    sep.className = "hint";
+    sep.style.margin = "10px 2px 2px 2px";
+    sep.textContent = t("search_results");
+    resultsEl.appendChild(sep);
+
+    list.forEach(item => {
+      const el = document.createElement("div");
+      el.className = "item";
+      el.innerHTML = `<div class="t1">${escapeHtml(item.name)}</div><div class="t2">${escapeHtml(item.display || "")}</div>`;
+      el.onclick = async () => { await pickCity(item, true); closeModal(); };
+      resultsEl.appendChild(el);
+    });
+  }
+
+  async function pickCity(item, saveToSaved){
+    city = item;
+    S.city = city;
+    renderCityTitle();
+
+    if (saveToSaved) {
+      const saved = S.savedCities;
+      const key = `${item.lat.toFixed(5)},${item.lon.toFixed(5)}`;
+      const exists = saved.some(x => (x._k || `${x.lat.toFixed(5)},${x.lon.toFixed(5)}`) === key);
+      if (!exists) {
+        saved.unshift({...item, _k:key});
+        S.savedCities = saved.slice(0, 12);
       }
-      return out;
     }
 
-    async function refreshTimes(){
-      // try cached coords first
-      let lat = parseFloat(lsGet(SP.LAT, ""));
-      let lon = parseFloat(lsGet(SP.LON, ""));
-      let coords = (!Number.isNaN(lat) && !Number.isNaN(lon)) ? {lat, lon} : null;
+    await refreshTimings();
+    try { tg?.HapticFeedback?.notificationOccurred?.("success"); } catch(_) {}
+  }
 
-      // if none, ask location
-      if (!coords){
-        const got = await getLocation();
-        coords = got;
-      }
+  // ---------------------------
+  // Geolocation
+  // ---------------------------
+  async function useGeolocation(){
+    showSplash();
+    try {
+      const pos = await new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error("no geolocation"));
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          timeout: 9000,
+          maximumAge: 120000
+        });
+      });
 
-      if (!coords){
-        // no location — show fallback
-        state.baseTimes = fallbackTimes(state.method);
-        elGeoValue.textContent = t().errors_geo;
-        recomputeShown();
-        renderList();
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      const url = "https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&addressdetails=1&lat=" +
+        encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lon);
+
+      const res = await fetch(url, { headers: { "Accept": "application/json" } });
+      const data = await res.json();
+
+      const cityName =
+        data.address?.city || data.address?.town || data.address?.village || data.address?.municipality ||
+        (data.display_name?.split(",")[0] || "").trim();
+
+      const country = data.address?.country || "";
+      const short = [cityName, country].filter(Boolean).join(", ");
+      const picked = {
+        name: short || cityName || "—",
+        display: data.display_name || short || "",
+        lat: parseFloat(lat),
+        lon: parseFloat(lon)
+      };
+
+      await pickCity(picked, true);
+      hideSplash();
+    } catch (e) {
+      console.error(e);
+      hideSplash();
+      try { tg?.HapticFeedback?.notificationOccurred?.("error"); } catch(_) {}
+    }
+  }
+
+  // ---------------------------
+  // Aladhan timings API
+  // ---------------------------
+  function methodIdFromCode(code){
+    return (METHODS.find(m => m.code === code)?.id) ?? 4;
+  }
+
+  async function fetchTimings(lat, lon){
+    const id = methodIdFromCode(method);
+    const url = `https://api.aladhan.com/v1/timings?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&method=${id}`;
+    const res = await fetch(url, { headers: { "Accept":"application/json" } });
+    if (!res.ok) throw new Error("aladhan http " + res.status);
+    const json = await res.json();
+    const tim = json?.data?.timings;
+    if (!tim) throw new Error("no timings");
+
+    const out = {};
+    PRAYERS.forEach(p => {
+      const raw = String(tim[p.key] || "").slice(0,5);
+      out[p.key] = raw.includes(":") ? raw : "00:00";
+    });
+    return out;
+  }
+
+  async function refreshTimings(){
+    if (!city) return;
+
+    showSplash();
+    try {
+      timings = await fetchTimings(city.lat, city.lon);
+      renderPrayers();
+      renderTimer();
+
+      if (timerTick) clearInterval(timerTick);
+      timerTick = setInterval(renderTimer, 1000);
+
+      hideSplash();
+    } catch (e) {
+      console.error(e);
+      hideSplash();
+    }
+  }
+
+  // ---------------------------
+  // Language switching
+  // ---------------------------
+  async function setLang(newLang){
+    lang = newLang;
+    S.lang = lang;
+    setDirByLang();
+    setLangButtons();
+
+    renderCityTitle();
+    renderMethods();
+    renderPrayers();
+    renderTimer();
+
+    if (modalOverlay.classList.contains("show")) openModal();
+    try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch(_) {}
+  }
+
+  function cycleLang(){
+    const order = ["ru","en","ar"];
+    const idx = order.indexOf(lang);
+    const next = order[(idx + 1) % order.length];
+    setLang(next);
+  }
+
+  // ---------------------------
+  // Events
+  // ---------------------------
+  cityTitleEl.onclick = openModal;
+  modalClose.onclick = closeModal;
+  modalOverlay.onclick = (e) => { if (e.target === modalOverlay) closeModal(); };
+
+  btnGeoInModal.onclick = async () => { await useGeolocation(); closeModal(); };
+  btnClearSaved.onclick = () => {
+    S.savedCities = [];
+    resultsEl.innerHTML = "";
+    renderSavedCitiesIntoResults();
+    try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch(_) {}
+  };
+
+  langRu.onclick = () => setLang("ru");
+  langEn.onclick = () => setLang("en");
+  langAr.onclick = () => setLang("ar");
+
+  langCycleBtn.onclick = cycleLang;
+
+  let searchDebounce = null;
+  cityInput.addEventListener("input", () => {
+    const q = cityInput.value.trim();
+    if (searchDebounce) clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(async () => {
+      if (q.length < 2) {
+        resultsEl.innerHTML = "";
+        renderSavedCitiesIntoResults();
         return;
       }
-
-      state.coords = coords;
-      lsSet(SP.LAT, coords.lat);
-      lsSet(SP.LON, coords.lon);
-
-      // reverse city
-      const cc = await reverseCityCountry(coords.lat, coords.lon);
-      if (cc.city) {
-        state.city = cc.city;
-        state.country = cc.country || "";
-        lsSet(SP.CITY, state.city);
-        lsSet(SP.COUNTRY, state.country);
-      }
-
-      // update UI
-      updateCityTitle();
-      elGeoValue.textContent = t().geo_value(`${coords.lat.toFixed(3)}, ${coords.lon.toFixed(3)}`);
-
-      // fetch timings
       try {
-        state.baseTimes = await fetchPrayerTimes(state.method, coords.lat, coords.lon);
-      } catch {
-        state.baseTimes = fallbackTimes(state.method);
+        const list = await nominatimSearch(q);
+        renderSearchResults(list);
+      } catch (e) {
+        console.error(e);
+        resultsEl.innerHTML = "";
+        renderSavedCitiesIntoResults();
       }
+    }, 250);
+  });
 
-      recomputeShown();
-      renderList();
+  // ---------------------------
+  // Boot
+  // ---------------------------
+  function boot(){
+    showSplash();
+    setDirByLang();
+    setLangButtons();
+    renderMethods();
+
+    if (!city) {
+      cityTitleEl.textContent = t("city_detecting");
+
+      // try geolocation once at first run
+      useGeolocation().finally(() => {
+        if (!city) {
+          hideSplash();
+          cityTitleEl.textContent = t("tap_choose");
+        }
+      });
+    } else {
+      renderCityTitle();
+      refreshTimings();
     }
+  }
 
-    function updateCityTitle(){
-      const L = t();
-      const cachedCity = state.city || lsGet(SP.CITY,"");
-      elCity.textContent = cachedCity ? cachedCity : L.city_detecting;
-    }
-
-    // -----------------------------
-    // Language logic (similar to LanguagePrefs)
-    // -----------------------------
-    function detectDefaultLang(){
-      const saved = lsGet(SP.LANG, "");
-      if (saved) return saved;
-
-      const tgLang = tg?.initDataUnsafe?.user?.language_code;
-      if (tgLang && ["ru","en","ar"].includes(tgLang)) return tgLang;
-
-      const nav = (navigator.language || "en").slice(0,2).toLowerCase();
-      if (["ru","en","ar"].includes(nav)) return nav;
-
-      return "ru";
-    }
-
-    function cycleLang(){
-      // simple cycle ru -> en -> ar -> ru
-      const order = ["ru","en","ar"];
-      const i = order.indexOf(state.lang);
-      const next = order[(i+1) % order.length];
-      state.lang = next;
-      lsSet(SP.LANG, next);
-      applyLangUI();
-      updateCityTitle();
-      renderChips();
-      renderList();
-      renderTimer();
-    }
-
-    // -----------------------------
-    // Events
-    // -----------------------------
-    btnOpenDrawer.addEventListener("click", openDrawer);
-    btnCloseDrawer.addEventListener("click", closeDrawer);
-    elScrim.addEventListener("click", closeDrawer);
-
-    itemLang.addEventListener("click", ()=>{
-      cycleLang();
-    });
-
-    itemGeo.addEventListener("click", async ()=>{
-      closeDrawer();
-      await refreshTimes();
-    });
-
-    itemReload.addEventListener("click", async ()=>{
-      closeDrawer();
-      await refreshTimes();
-    });
-
-    itemCloseMini.addEventListener("click", ()=>{
-      closeDrawer();
-      try { tg?.close(); } catch(_) {}
-    });
-
-    elSheetScrim.addEventListener("click", closeSheet);
-    btnCloseSheet.addEventListener("click", closeSheet);
-
-    btnSave.addEventListener("click", ()=>{
-      const key = state.editingKey;
-      if (!key) return;
-      const h = clamp(parseInt(pickHour.value,10)||0,0,23);
-      const m = clamp(parseInt(pickMinute.value,10)||0,0,59);
-      state.overrides[key] = fmtHHMM(h,m);
-      saveOverrides();
-      recomputeShown();
-      renderList();
-      closeSheet();
-    });
-
-    btnReset.addEventListener("click", ()=>{
-      const key = state.editingKey;
-      if (!key) return;
-      if (!state.overrides[key]) return;
-      delete state.overrides[key];
-      saveOverrides();
-      recomputeShown();
-      renderList();
-      closeSheet();
-    });
-
-    // -----------------------------
-    // Init
-    // -----------------------------
-    (async function init(){
-      buildHourMinuteOptions();
-
-      state.lang = detectDefaultLang();
-      state.method = lsGet(SP.METHOD, "UMM_AL_QURA");
-
-      loadOverrides();
-      applyLangUI();
-
-      // initial city title
-      state.city = lsGet(SP.CITY,"");
-      updateCityTitle();
-
-      renderChips();
-
-      // initial base times (fast), then refresh
-      state.baseTimes = fallbackTimes(state.method);
-      recomputeShown();
-      renderList();
-
-      // try fetch real times
-      await refreshTimes();
-
-      // timer tick
-      setInterval(()=>{
-        // recompute next occasionally to be safe
-        tick();
-      }, 1000);
-
-      // force correct "next" render
-      computeNext();
-      renderTimer();
-      renderList();
-    })();
+  boot();
+})();
   </script>
 </body>
 </html>
