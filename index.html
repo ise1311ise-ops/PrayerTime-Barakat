@@ -26,6 +26,9 @@
       --pad: 14px;
       --safeTop: env(safe-area-inset-top);
       --safeBot: env(safe-area-inset-bottom);
+
+      /* ✅ фон-картинка (браузер попробует по очереди) */
+      --bg-main: url("bg_main.webp"), url("bg_main.png"), url("bg_main.jpg");
     }
 
     *{ box-sizing:border-box; }
@@ -33,12 +36,32 @@
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+      /* базовый градиент остаётся */
       background: radial-gradient(1200px 700px at 50% -10%, rgba(103,229,255,.10), transparent 55%),
                   linear-gradient(180deg, #05070a, #04060a 30%, #020407);
       color:var(--txt);
       overflow-x:hidden;
+
+      /* ✅ нужно для слоёв :before / :after */
+      position: relative;
     }
 
+    /* ✅ слой с картинкой bg_main */
+    body:after{
+      content:"";
+      position:fixed; inset:0;
+      background-image: var(--bg-main);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: .22;               /* можно менять 0.12–0.35 */
+      filter: saturate(1.05) contrast(1.06);
+      pointer-events:none;
+      z-index:-2;
+    }
+
+    /* звёздочки поверх bg_main */
     body:before{
       content:"";
       position:fixed; inset:0;
@@ -51,6 +74,7 @@
         radial-gradient(1px 1px at 60% 78%, rgba(255,255,255,.06), transparent 60%);
       pointer-events:none;
       opacity:.6;
+      z-index:-1;
     }
 
     .app{
@@ -58,6 +82,8 @@
       padding: calc(10px + var(--safeTop)) 12px calc(14px + var(--safeBot)) 12px;
       max-width: 560px;
       margin: 0 auto;
+      position: relative;
+      z-index: 0;
     }
 
     .topbar{
