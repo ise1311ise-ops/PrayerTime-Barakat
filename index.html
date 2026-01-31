@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
@@ -11,20 +12,17 @@
 
   <style>
     :root{
-      --bg0:#05070a;
-      --bg1:#020407;
+      --bg:#06080b;
       --card:#0b0f12;
-      --glass: rgba(255,255,255,.055);
-      --glass2: rgba(255,255,255,.022);
-      --line: rgba(255,255,255,.12);
+      --glass: rgba(255,255,255,.06);
+      --line: rgba(255,255,255,.10);
       --line2: rgba(255,255,255,.06);
       --txt:#ffffff;
       --muted: rgba(255,255,255,.55);
       --muted2: rgba(255,255,255,.35);
       --neon:#67E5FF;
-      --neonA: rgba(103,229,255,.15);
-      --neonB: rgba(103,229,255,.08);
-      --shadow: 0 16px 50px rgba(0,0,0,.55);
+      --neon2: rgba(103,229,255,.22);
+      --shadow: 0 10px 30px rgba(0,0,0,.45);
       --r: 22px;
       --pad: 14px;
       --safeTop: env(safe-area-inset-top);
@@ -36,29 +34,24 @@
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 50% -10%, rgba(103,229,255,.10), transparent 55%),
+                  linear-gradient(180deg, #05070a, #04060a 30%, #020407);
       color:var(--txt);
       overflow-x:hidden;
-
-      /* фон как в приложении: тёмный + лёгкий неон */
-      background:
-        radial-gradient(1000px 520px at 50% -10%, rgba(103,229,255,.12), transparent 60%),
-        radial-gradient(900px 520px at 90% 110%, rgba(103,229,255,.06), transparent 60%),
-        linear-gradient(180deg, var(--bg0), var(--bg1) 42%, #010205);
     }
 
-    /* звёздочки/пыль */
     body:before{
       content:"";
       position:fixed; inset:0;
       background:
         radial-gradient(1px 1px at 10% 10%, rgba(255,255,255,.08), transparent 60%),
-        radial-gradient(1px 1px at 30% 25%, rgba(255,255,255,.06), transparent 60%),
-        radial-gradient(1px 1px at 70% 18%, rgba(255,255,255,.05), transparent 60%),
-        radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,.05), transparent 60%),
-        radial-gradient(1px 1px at 20% 70%, rgba(255,255,255,.04), transparent 60%),
-        radial-gradient(1px 1px at 60% 78%, rgba(255,255,255,.05), transparent 60%);
+        radial-gradient(1px 1px at 30% 25%, rgba(255,255,255,.07), transparent 60%),
+        radial-gradient(1px 1px at 70% 18%, rgba(255,255,255,.06), transparent 60%),
+        radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,.06), transparent 60%),
+        radial-gradient(1px 1px at 20% 70%, rgba(255,255,255,.05), transparent 60%),
+        radial-gradient(1px 1px at 60% 78%, rgba(255,255,255,.06), transparent 60%);
       pointer-events:none;
-      opacity:.55;
+      opacity:.6;
     }
 
     .app{
@@ -66,84 +59,8 @@
       padding: calc(10px + var(--safeTop)) 12px calc(14px + var(--safeBot)) 12px;
       max-width: 560px;
       margin: 0 auto;
-      position: relative;
-      z-index: 2;
     }
 
-    /* optional: если у тебя есть bg_main.jpg рядом — будет как в приложении */
-    .bgMain{
-      position:fixed; inset:0;
-      pointer-events:none;
-      z-index:0;
-      background:
-        linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.65)),
-        url("bg_main.jpg") center/cover no-repeat;
-      opacity:.35;
-      filter: saturate(0.95) contrast(1.08);
-      display:none; /* включи true в JS (USE_BG_IMAGE) */
-    }
-
-    /* -----------------------------------------
-       НЕОНОВЫЙ "COMET" КАРД (как в Compose)
-       ----------------------------------------- */
-    .neonCard{
-      position:relative;
-      border-radius: var(--r);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      border: 1px solid rgba(255,255,255,.12);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      isolation:isolate;
-    }
-    .neonCard .inner{
-      position:relative;
-      z-index:2;
-    }
-
-    /* лёгкий внутренний неоновый тинт */
-    .neonCard:after{
-      content:"";
-      position:absolute; inset:-2px;
-      pointer-events:none;
-      opacity:.9;
-      background:
-        radial-gradient(600px 140px at 10% 18%, rgba(103,229,255,.14), transparent 62%),
-        radial-gradient(600px 140px at 90% 82%, rgba(103,229,255,.10), transparent 62%);
-      mix-blend-mode: screen;
-      z-index:1;
-    }
-
-    /* Комета по бордеру (CSS mask). На старых браузерах просто не будет "бегущей" кометы — остальное ок */
-    .neonCard.cometOn:before{
-      content:"";
-      position:absolute; inset:-2px;
-      border-radius: inherit;
-      padding: 2px; /* толщина "неона" */
-      background:
-        conic-gradient(
-          from 0deg,
-          rgba(103,229,255,0) 0deg,
-          rgba(103,229,255,.0) 250deg,
-          rgba(103,229,255,.85) 290deg,
-          rgba(103,229,255,.10) 320deg,
-          rgba(103,229,255,0) 360deg
-        );
-      -webkit-mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor;
-              mask-composite: exclude;
-      opacity:.95;
-      filter: drop-shadow(0 0 16px rgba(103,229,255,.20));
-      animation: spinBorder 8s linear infinite;
-      pointer-events:none;
-      z-index:3;
-    }
-    @keyframes spinBorder{
-      to{ transform: rotate(360deg); }
-    }
-
-    /* topbar */
     .topbar{
       display:flex;
       align-items:center;
@@ -158,17 +75,17 @@
       gap:10px;
       padding: 10px 12px;
       border-radius: 999px;
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
       border: 1px solid rgba(255,255,255,.12);
-      box-shadow: 0 10px 28px rgba(0,0,0,.35);
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
       cursor:pointer;
       user-select:none;
       min-width: 0;
     }
 
     .pill .icon{
-      width: 34px;
-      height: 34px;
+      width: 30px;
+      height: 30px;
       display:grid;
       place-items:center;
       border-radius:999px;
@@ -216,13 +133,31 @@
       user-select:none;
     }
     .lang button.active{
-      border-color: rgba(103,229,255,.70);
+      border-color: rgba(103,229,255,.65);
       box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset;
       background: rgba(103,229,255,.10);
       color:#fff;
     }
 
-    /* timer card content */
+    .card{
+      border-radius: var(--r);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .card:after{
+      content:"";
+      position:absolute; inset:-2px;
+      pointer-events:none;
+      opacity:.9;
+      background:
+        radial-gradient(500px 120px at 10% 20%, rgba(103,229,255,.12), transparent 60%),
+        radial-gradient(500px 120px at 90% 80%, rgba(103,229,255,.10), transparent 60%);
+      mix-blend-mode: screen;
+    }
+
     .timer{
       height: 92px;
       display:flex;
@@ -238,13 +173,13 @@
       place-items:center;
       background: radial-gradient(circle at 30% 30%, rgba(103,229,255,.22), transparent 62%);
       border:1px solid rgba(103,229,255,.22);
-      box-shadow: 0 0 22px rgba(103,229,255,.12);
+      box-shadow: 0 0 18px rgba(103,229,255,.10);
       flex:0 0 auto;
-      z-index:2;
+      z-index:1;
     }
     .badge span{ font-size:18px; }
 
-    .timer .meta{ flex:1; min-width:0; z-index:2; }
+    .timer .meta{ flex:1; min-width:0; z-index:1; }
     .timer .meta .label{
       font-size: 12px;
       font-weight: 800;
@@ -257,14 +192,13 @@
       letter-spacing: .5px;
     }
     .timer .next{
-      z-index:2;
+      z-index:1;
       font-size: 13px;
       font-weight: 900;
       color: rgba(255,255,255,.78);
       white-space:nowrap;
     }
 
-    /* методы */
     .row{
       display:flex;
       gap:8px;
@@ -294,7 +228,6 @@
       box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset;
     }
 
-    /* список намазов — как в приложении: стеклянные карточки */
     .list{
       margin-top: 10px;
       display:flex;
@@ -313,50 +246,20 @@
       border: 1px solid rgba(255,255,255,.10);
       position:relative;
       overflow:hidden;
-      box-shadow: 0 10px 26px rgba(0,0,0,.22);
     }
-
-    /* next: включаем comet + неоновый акцент */
     .prayer.next{
-      border-color: rgba(103,229,255,.48);
-      box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset, 0 14px 34px rgba(0,0,0,.35);
+      border-color: rgba(103,229,255,.50);
+      box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset, 0 12px 30px rgba(0,0,0,.35);
     }
-    .prayer.next:before{
-      content:"";
-      position:absolute; inset:-2px;
-      border-radius: inherit;
-      padding: 2px;
-      background:
-        conic-gradient(
-          from 0deg,
-          rgba(103,229,255,0) 0deg,
-          rgba(103,229,255,.0) 250deg,
-          rgba(103,229,255,.85) 290deg,
-          rgba(103,229,255,.10) 320deg,
-          rgba(103,229,255,0) 360deg
-        );
-      -webkit-mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor;
-              mask-composite: exclude;
-      opacity:.85;
-      filter: drop-shadow(0 0 14px rgba(103,229,255,.18));
-      animation: spinBorder 8s linear infinite;
-      pointer-events:none;
-      z-index:2;
-    }
-
     .dot{
       width: 10px; height: 10px;
       border-radius: 999px;
       background: rgba(255,255,255,.20);
       flex:0 0 auto;
-      z-index:3;
     }
     .prayer.next .dot{ background: var(--neon); }
 
-    .names{ flex:1; min-width:0; z-index:3; }
+    .names{ flex:1; min-width:0; }
     .names .n1{
       font-weight: 950;
       font-size: 16px;
@@ -366,7 +269,7 @@
     .names .n2{
       font-size: 13px;
       font-weight: 800;
-      color: rgba(255,255,255,.34);
+      color: rgba(255,255,255,.38);
       margin-top: 3px;
       white-space:nowrap;
       overflow:hidden;
@@ -379,7 +282,6 @@
       color: rgba(255,255,255,.86);
       letter-spacing: .2px;
       flex:0 0 auto;
-      z-index:3;
     }
 
     .footer{
@@ -492,22 +394,6 @@
       gap:10px;
       margin-top: 12px;
     }
-    .btn{
-      appearance:none;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.04);
-      color:#fff;
-      font-weight: 950;
-      padding: 12px 12px;
-      border-radius: 16px;
-      cursor:pointer;
-      flex: 1;
-    }
-    .btn.primary{
-      border-color: rgba(103,229,255,.55);
-      background: rgba(103,229,255,.10);
-      box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset;
-    }
 
     /* RTL tweaks for Arabic */
     [dir="rtl"] .topbar{ flex-direction: row-reverse; }
@@ -515,56 +401,10 @@
     [dir="rtl"] .timer{ direction: rtl; }
     [dir="rtl"] .prayer{ direction: rtl; }
     [dir="rtl"] .names .n2{ opacity:.55; }
-
-    /* =========================================
-       Splash / Zastavka (zastavka.png)
-       ========================================= */
-    .splash{
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      display: grid;
-      place-items: center;
-      background: #06080b;
-      padding: calc(18px + var(--safeTop)) 18px calc(18px + var(--safeBot)) 18px;
-      transition: opacity .28s ease, transform .28s ease;
-    }
-    .splash.hide{
-      opacity: 0;
-      transform: translateY(6px);
-      pointer-events: none;
-    }
-    .splashImg{
-      width: min(420px, 86vw);
-      max-height: min(520px, 60vh);
-      object-fit: contain;
-      border-radius: 18px;
-      box-shadow: 0 18px 70px rgba(0,0,0,.55);
-    }
-    .splashLoader{
-      margin-top: 18px;
-      width: 34px;
-      height: 34px;
-      border-radius: 999px;
-      border: 3px solid rgba(255,255,255,.16);
-      border-top-color: rgba(103,229,255,.85);
-      animation: spin .85s linear infinite;
-    }
-    @keyframes spin{
-      to { transform: rotate(360deg); }
-    }
   </style>
 </head>
 
 <body>
-  <div class="bgMain" id="bgMain"></div>
-
-  <!-- Splash / Zastavka -->
-  <div class="splash" id="splash" aria-hidden="false">
-    <img class="splashImg" src="zastavka.png" alt="PrayerTime Barakat" />
-    <div class="splashLoader" aria-label="Loading"></div>
-  </div>
-
   <div class="app">
     <div class="topbar">
       <div class="pill" id="cityPill" role="button" aria-label="Choose city">
@@ -582,9 +422,8 @@
       </div>
     </div>
 
-    <!-- Timer (как в приложении: неоновая карточка с кометой) -->
-    <div class="neonCard cometOn">
-      <div class="inner timer">
+    <div class="card">
+      <div class="timer">
         <div class="badge"><span>⏱</span></div>
         <div class="meta">
           <div class="label" id="untilLabel">…</div>
@@ -597,7 +436,7 @@
     <div class="row" id="methodRow"></div>
     <div class="list" id="prayerList"></div>
 
-    <!-- низ: только статус -->
+    <!-- ✅ низ: только статус, без кнопок -->
     <div class="footer">
       <div id="statusText">—</div>
       <div id="noteText"></div>
@@ -630,13 +469,6 @@
 
   <script>
 (() => {
-  // ============================
-  // OPTIONAL background image (как bg_main в приложении)
-  // ============================
-  const USE_BG_IMAGE = false; // поставь true, если добавишь bg_main.jpg рядом
-  const bgMain = document.getElementById("bgMain");
-  if (USE_BG_IMAGE && bgMain) bgMain.style.display = "block";
-
   // ---------------------------
   // Telegram init (safe)
   // ---------------------------
@@ -671,7 +503,6 @@
       isha: "Иша",
       saved: "Сохранённые",
       search_results: "Результаты",
-      tap_choose: "Нажмите, чтобы выбрать город",
     },
     en: {
       city_detecting: "Detecting city…",
@@ -692,7 +523,6 @@
       isha: "Isha",
       saved: "Saved",
       search_results: "Results",
-      tap_choose: "Tap to choose city",
     },
     ar: {
       city_detecting: "جارٍ تحديد المدينة…",
@@ -713,7 +543,6 @@
       isha: "العشاء",
       saved: "محفوظ",
       search_results: "النتائج",
-      tap_choose: "اضغط لاختيار المدينة",
     },
   };
 
@@ -726,11 +555,11 @@
   ];
 
   const METHODS = [
-    { id: 2,  code:"ISNA",         title:"ISNA" },
-    { id: 3,  code:"MWL",          title:"MWL" },
-    { id: 4,  code:"UMM_AL_QURA",  title:"Umm al-Qura" },
-    { id: 5,  code:"EGYPT",        title:"Egypt" },
-    { id: 15, code:"MOONSIGHTING", title:"Moonsighting" },
+    { id: 2,  code:"ISNA",        title:"ISNA" },
+    { id: 3,  code:"MWL",         title:"MWL" },
+    { id: 4,  code:"UMM_AL_QURA", title:"Umm al-Qura" },
+    { id: 5,  code:"EGYPT",       title:"Egypt" },
+    { id: 15, code:"MOONSIGHTING",title:"Moonsighting" },
   ];
 
   // ---------------------------
@@ -754,8 +583,6 @@
   // ---------------------------
   // DOM
   // ---------------------------
-  const splash     = document.getElementById("splash");
-
   const cityPill   = document.getElementById("cityPill");
   const cityTitle  = document.getElementById("cityTitle");
   const citySub    = document.getElementById("citySub");
@@ -793,20 +620,6 @@
   let city = S.city; // {name, display, lat, lon}
   let timings = null; // {Fajr:"HH:MM", ...}
   let timerTick = null;
-
-  // ---------------------------
-  // Splash helpers
-  // ---------------------------
-  function showSplash(){
-    if (!splash) return;
-    splash.classList.remove("hide");
-    splash.setAttribute("aria-hidden", "false");
-  }
-  function hideSplash(){
-    if (!splash) return;
-    splash.classList.add("hide");
-    splash.setAttribute("aria-hidden", "true");
-  }
 
   // ---------------------------
   // UI helpers
@@ -902,7 +715,6 @@
     if (!timings) {
       remainText.textContent = "--:--:--";
       nextText.textContent = "—";
-      untilLabel.textContent = "…";
       return;
     }
 
@@ -1006,7 +818,7 @@
     sep.textContent = t("saved");
     resultsEl.appendChild(sep);
 
-    saved.slice(0, 10).forEach(item => {
+    saved.slice(0, 8).forEach(item => {
       const el = document.createElement("div");
       el.className = "item saved";
       el.innerHTML = `<div class="t1">${escapeHtml(item.name)}</div><div class="t2">${escapeHtml(item.display || "")}</div>`;
@@ -1057,7 +869,6 @@
   // Geolocation
   // ---------------------------
   async function useGeolocation(){
-    showSplash();
     setStatus(t("status_loading"));
     try {
       const pos = await new Promise((resolve, reject) => {
@@ -1093,11 +904,9 @@
 
       await pickCity(picked, true);
       setStatus(t("status_ok"));
-      hideSplash();
     } catch (e) {
       console.error(e);
       setStatus(t("status_err"));
-      hideSplash();
       try { tg?.HapticFeedback?.notificationOccurred?.("error"); } catch(_) {}
     }
   }
@@ -1129,7 +938,6 @@
   async function refreshTimings(){
     if (!city) return;
 
-    showSplash();
     setStatus(t("status_loading"));
     try {
       timings = await fetchTimings(city.lat, city.lon);
@@ -1140,11 +948,9 @@
       timerTick = setInterval(renderTimer, 1000);
 
       setStatus(t("status_ok"));
-      hideSplash();
     } catch (e) {
       console.error(e);
       setStatus(t("status_err"));
-      hideSplash();
     }
   }
 
@@ -1209,7 +1015,6 @@
   // Boot
   // ---------------------------
   function boot(){
-    showSplash();
     setDirByLang();
     setLangButtons();
     renderMethods();
@@ -1224,9 +1029,8 @@
       useGeolocation().finally(() => {
         if (!city) {
           setStatus(t("status_err"));
-          hideSplash();
           cityTitle.textContent = t("city_detecting");
-          citySub.textContent = t("tap_choose");
+          citySub.textContent = (lang === "ar") ? "اضغط لاختيار المدينة" : (lang === "en" ? "Tap to choose city" : "Нажмите, чтобы выбрать город");
         }
       });
     } else {
@@ -1236,7 +1040,8 @@
   }
 
   boot();
+
 })();
-  </script>
+</script>
 </body>
 </html>
