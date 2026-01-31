@@ -29,21 +29,35 @@
 
       /* ✅ фон-картинка (браузер попробует по очереди) */
       --bg-main: url("bg_main.webp"), url("bg_main.png"), url("bg_main.jpg");
+
+      /* ✅ Compose-like tuning */
+      --cardA1: .060;   /* top fill */
+      --cardA2: .018;   /* bottom fill */
+      --cardBorder: .12;
+      --cardInnerBorder: .05;
+
+      --chipA1: .050;
+      --chipA2: .020;
+      --chipBorder: .14;
+      --chipBorderOn: .70;
+
+      --neonTintRounded: .14;
+      --neonTintCircle: .16;
+
+      --tinyBtn: 28px;
     }
 
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
+
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 
-      /* базовый градиент остаётся */
       background: radial-gradient(1200px 700px at 50% -10%, rgba(103,229,255,.10), transparent 55%),
                   linear-gradient(180deg, #05070a, #04060a 30%, #020407);
       color:var(--txt);
       overflow-x:hidden;
-
-      /* ✅ нужно для слоёв :before / :after */
       position: relative;
     }
 
@@ -57,6 +71,15 @@
       background-repeat: no-repeat;
       opacity: .22;               /* можно менять 0.12–0.35 */
       filter: saturate(1.05) contrast(1.06);
+      pointer-events:none;
+      z-index:-3;
+    }
+
+    /* ✅ dimmer чтобы одинаково темно в разных WebView (Telegram/браузер) */
+    html:before{
+      content:"";
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.45); /* 🔧 0.35–0.60 */
       pointer-events:none;
       z-index:-2;
     }
@@ -114,7 +137,7 @@
       display:grid;
       place-items:center;
       border-radius:999px;
-      background: radial-gradient(circle at 30% 30%, rgba(103,229,255,.18), transparent 60%);
+      background: radial-gradient(circle at 35% 35%, rgba(103,229,255,var(--neonTintCircle)), transparent 65%);
       border: 1px solid rgba(103,229,255,.25);
       box-shadow: 0 0 0 1px rgba(103,229,255,.08) inset;
       flex:0 0 auto;
@@ -147,8 +170,8 @@
     }
     .lang button{
       appearance:none;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,var(--chipBorder));
+      background: linear-gradient(180deg, rgba(255,255,255,var(--chipA1)), rgba(255,255,255,var(--chipA2)));
       color: rgba(255,255,255,.82);
       font-weight: 900;
       font-size: 12px;
@@ -160,27 +183,66 @@
     .lang button.active{
       border-color: rgba(103,229,255,.65);
       box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset;
-      background: rgba(103,229,255,.10);
+      background: linear-gradient(90deg, rgba(103,229,255,var(--neonTintRounded)), transparent);
       color:#fff;
     }
 
+    /* ✅ Card = NeonCometCard base */
     .card{
       border-radius: var(--r);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg,
+        rgba(255,255,255,var(--cardA1)),
+        rgba(255,255,255,var(--cardA2))
+      );
+      border: 1px solid rgba(255,255,255,var(--cardBorder));
       box-shadow: var(--shadow);
       overflow:hidden;
       position:relative;
     }
+
+    /* inner stroke like Compose */
+    .innerStroke{
+      position:absolute;
+      inset: 1px;
+      border-radius: calc(var(--r) - 1px);
+      border: 1px solid rgba(255,255,255,var(--cardInnerBorder));
+      pointer-events:none;
+      z-index:2;
+    }
+
+    /* neon tint overlay (only when .neonOn) */
+    .card.neonOn:before{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(90deg,
+        rgba(103,229,255,var(--neonTintRounded)),
+        transparent
+      );
+      pointer-events:none;
+      z-index:1;
+    }
+
+    /* ✅ отключаем screen (слишком по-разному в webview) */
     .card:after{
       content:"";
       position:absolute; inset:-2px;
       pointer-events:none;
-      opacity:.9;
+      opacity:.65;
       background:
         radial-gradient(500px 120px at 10% 20%, rgba(103,229,255,.12), transparent 60%),
         radial-gradient(500px 120px at 90% 80%, rgba(103,229,255,.10), transparent 60%);
-      mix-blend-mode: screen;
+      mix-blend-mode: normal;
+      z-index:0;
+    }
+
+    /* comet canvas overlay */
+    .cometCanvas{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      pointer-events:none;
+      z-index:3;
     }
 
     .timer{
@@ -189,6 +251,8 @@
       align-items:center;
       gap:12px;
       padding: 14px;
+      position:relative;
+      z-index:4; /* поверх tint/after */
     }
 
     .badge{
@@ -196,19 +260,19 @@
       border-radius:999px;
       display:grid;
       place-items:center;
-      background: radial-gradient(circle at 30% 30%, rgba(103,229,255,.22), transparent 62%);
+      background: radial-gradient(circle at 35% 35%, rgba(103,229,255,var(--neonTintCircle)), transparent 65%);
       border:1px solid rgba(103,229,255,.22);
       box-shadow: 0 0 18px rgba(103,229,255,.10);
       flex:0 0 auto;
-      z-index:1;
+      z-index:4;
     }
     .badge span{ font-size:18px; }
 
-    .timer .meta{ flex:1; min-width:0; z-index:1; }
+    .timer .meta{ flex:1; min-width:0; z-index:4; }
     .timer .meta .label{
       font-size: 12px;
       font-weight: 800;
-      color: rgba(255,255,255,.70);
+      color: rgba(255,255,255,.72);
       margin-bottom: 2px;
     }
     .timer .meta .time{
@@ -217,7 +281,7 @@
       letter-spacing: .5px;
     }
     .timer .next{
-      z-index:1;
+      z-index:4;
       font-size: 13px;
       font-weight: 900;
       color: rgba(255,255,255,.78);
@@ -234,21 +298,28 @@
     }
     .row::-webkit-scrollbar{ display:none; }
 
+    /* ✅ MethodChip like Compose */
     .chip{
       flex:0 0 auto;
-      padding: 10px 12px;
+      padding: 10px 14px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.03);
-      color: rgba(255,255,255,.80);
+      border: 1px solid rgba(255,255,255,var(--chipBorder));
+      background: linear-gradient(180deg,
+        rgba(255,255,255,var(--chipA1)),
+        rgba(255,255,255,var(--chipA2))
+      );
+      color: rgba(255,255,255,.78);
       font-weight: 900;
       font-size: 12px;
       cursor:pointer;
       user-select:none;
     }
     .chip.active{
-      border-color: rgba(103,229,255,.75);
-      background: rgba(103,229,255,.10);
+      border-color: rgba(103,229,255,var(--chipBorderOn));
+      background: linear-gradient(90deg,
+        rgba(103,229,255,var(--neonTintRounded)),
+        transparent
+      );
       color:#fff;
       box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset;
     }
@@ -267,24 +338,41 @@
       gap:12px;
       padding: 12px 14px;
       border-radius: 20px;
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.018));
       border: 1px solid rgba(255,255,255,.10);
       position:relative;
       overflow:hidden;
     }
+    .prayer .innerStroke{
+      inset: 1px;
+      border-radius: 19px;
+      border-color: rgba(255,255,255,.05);
+      z-index:2;
+    }
+
     .prayer.next{
       border-color: rgba(103,229,255,.50);
       box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset, 0 12px 30px rgba(0,0,0,.35);
     }
+    .prayer.next:before{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(90deg, rgba(103,229,255,var(--neonTintRounded)), transparent);
+      pointer-events:none;
+      z-index:1;
+    }
+
     .dot{
       width: 10px; height: 10px;
       border-radius: 999px;
       background: rgba(255,255,255,.20);
       flex:0 0 auto;
+      position:relative;
+      z-index:4;
     }
     .prayer.next .dot{ background: var(--neon); }
 
-    .names{ flex:1; min-width:0; }
+    .names{ flex:1; min-width:0; position:relative; z-index:4; }
     .names .n1{
       font-weight: 950;
       font-size: 16px;
@@ -307,6 +395,8 @@
       color: rgba(255,255,255,.86);
       letter-spacing: .2px;
       flex:0 0 auto;
+      position:relative;
+      z-index:4;
     }
 
     .footer{
@@ -447,7 +537,9 @@
       </div>
     </div>
 
-    <div class="card">
+    <!-- ✅ timer card with inner stroke + comet -->
+    <div class="card neonOn" id="timerCard">
+      <div class="innerStroke"></div>
       <div class="timer">
         <div class="badge"><span>⏱</span></div>
         <div class="meta">
@@ -461,7 +553,6 @@
     <div class="row" id="methodRow"></div>
     <div class="list" id="prayerList"></div>
 
-    <!-- ✅ низ: только статус, без кнопок -->
     <div class="footer">
       <div id="statusText">—</div>
       <div id="noteText"></div>
@@ -646,6 +737,10 @@
   let timings = null; // {Fajr:"HH:MM", ...}
   let timerTick = null;
 
+  // comet cleanup tracking
+  let timerCometAttached = false;
+  let prayerCometCleanup = [];
+
   // ---------------------------
   // UI helpers
   // ---------------------------
@@ -714,6 +809,10 @@
   }
 
   function renderPrayers(){
+    // cleanup comets from previous render
+    prayerCometCleanup.forEach(fn => { try { fn(); } catch(_) {} });
+    prayerCometCleanup = [];
+
     prayerList.innerHTML = "";
     if (!timings) return;
 
@@ -723,8 +822,10 @@
 
     items.forEach(p => {
       const row = document.createElement("div");
-      row.className = "prayer" + (p.key === next.key ? " next" : "");
+      const isNext = (p.key === next.key);
+      row.className = "prayer" + (isNext ? " next" : "");
       row.innerHTML = `
+        <div class="innerStroke"></div>
         <div class="dot"></div>
         <div class="names">
           <div class="n1">${escapeHtml(p.name)}</div>
@@ -733,6 +834,12 @@
         <div class="ptime">${escapeHtml(p.time)}</div>
       `;
       prayerList.appendChild(row);
+
+      // ✅ comet only on next prayer
+      if (isNext) {
+        const off = attachComet(row, "#67E5FF", 20);
+        prayerCometCleanup.push(off);
+      }
     });
   }
 
@@ -970,7 +1077,11 @@
       renderTimer();
 
       if (timerTick) clearInterval(timerTick);
-      timerTick = setInterval(renderTimer, 1000);
+      timerTick = setInterval(() => {
+        renderTimer();
+        // комета на "следующем намазе" пересоздаётся при refreshTimings/renderPrayers,
+        // таймер обновляем каждую секунду без перерисовки списка
+      }, 1000);
 
       setStatus(t("status_ok"));
     } catch (e) {
@@ -1037,6 +1148,141 @@
   });
 
   // ---------------------------
+  // ✅ Comet implementation (Compose NeonCometBorder-like)
+  // ---------------------------
+  function attachComet(el, neon = "#67E5FF", cornerPx = 22){
+    const c = document.createElement("canvas");
+    c.className = "cometCanvas";
+    el.style.position = "relative";
+    el.appendChild(c);
+
+    const ctx = c.getContext("2d");
+    let dpr = Math.max(1, window.devicePixelRatio || 1);
+    let ro = null;
+    let alive = true;
+
+    function resize(){
+      if (!alive) return;
+      dpr = Math.max(1, window.devicePixelRatio || 1);
+      const r = el.getBoundingClientRect();
+      c.width  = Math.max(1, Math.floor(r.width * dpr));
+      c.height = Math.max(1, Math.floor(r.height * dpr));
+      c.style.width = r.width + "px";
+      c.style.height = r.height + "px";
+    }
+
+    function getPointOnPath(dist, w, h, r){
+      const sw = Math.max(0, w - 2*r);
+      const sh = Math.max(0, h - 2*r);
+      const arc = (Math.PI/2) * r;
+      const per = 2*(sw+sh) + 4*arc;
+
+      let d = dist % per;
+      if (d < 0) d += per;
+
+      if (d <= sw) return {x: r + d, y: 0};
+      d -= sw;
+
+      if (d <= arc){
+        const t = d / r;
+        return {x: r+sw + r*Math.sin(t), y: r - r*Math.cos(t)};
+      }
+      d -= arc;
+
+      if (d <= sh) return {x: w, y: r + d};
+      d -= sh;
+
+      if (d <= arc){
+        const t = d / r;
+        return {x: w - r + r*Math.cos(t), y: h - r + r*Math.sin(t)};
+      }
+      d -= arc;
+
+      if (d <= sw) return {x: w - r - d, y: h};
+      d -= sw;
+
+      if (d <= arc){
+        const t = d / r;
+        return {x: r - r*Math.sin(t), y: h - r + r*Math.cos(t)};
+      }
+      d -= arc;
+
+      if (d <= sh) return {x: 0, y: h - r - d};
+      d -= sh;
+
+      const t = d / r;
+      return {x: r - r*Math.cos(t), y: r - r*Math.sin(t)};
+    }
+
+    function smoothstep(x){
+      return x*x*(3 - 2*x);
+    }
+
+    function hexToRgba(hex, a){
+      const h = hex.replace("#","");
+      const n = parseInt(h.length===3 ? h.split("").map(x=>x+x).join("") : h, 16);
+      const r = (n>>16)&255, g=(n>>8)&255, b=n&255;
+      return `rgba(${r},${g},${b},${a})`;
+    }
+
+    let start = performance.now();
+    function frame(now){
+      if (!alive) return;
+
+      const w = c.width;
+      const h = c.height;
+      if (w <= 2 || h <= 2) { requestAnimationFrame(frame); return; }
+
+      ctx.clearRect(0,0,w,h);
+
+      const rr = Math.min(cornerPx * dpr, Math.min(w,h)/2);
+      const sw = Math.max(0, w - 2*rr);
+      const sh = Math.max(0, h - 2*rr);
+      const arc = (Math.PI/2) * rr;
+      const per = 2*(sw+sh) + 4*arc;
+
+      const t = ((now - start) / 3200) % 1; // скорость
+      const head = t * per;
+
+      const steps = 100;       // как оптимизация в Compose
+      const tailLen = per*0.25; // хвост 25%
+      ctx.lineCap = "round";
+
+      for(let i=0;i<steps;i++){
+        const t0 = i/steps;
+        const k = 1 - smoothstep(t0);
+
+        const d0 = head - i*(tailLen/steps);
+        const d1 = head - (i+1)*(tailLen/steps);
+
+        const p0 = getPointOnPath(d0, w, h, rr);
+        const p1 = getPointOnPath(d1, w, h, rr);
+
+        ctx.strokeStyle = hexToRgba(neon, 0.85*k);
+        ctx.lineWidth = (1.5 + 3.5*k) * dpr;
+
+        ctx.beginPath();
+        ctx.moveTo(p0.x, p0.y);
+        ctx.lineTo(p1.x, p1.y);
+        ctx.stroke();
+      }
+
+      requestAnimationFrame(frame);
+    }
+
+    resize();
+    ro = new ResizeObserver(resize);
+    ro.observe(el);
+    requestAnimationFrame(frame);
+
+    return () => {
+      alive = false;
+      try { ro && ro.disconnect(); } catch(_) {}
+      try { c.remove(); } catch(_) {}
+    };
+  }
+
+  // ---------------------------
   // Boot
   // ---------------------------
   function boot(){
@@ -1044,12 +1290,20 @@
     setLangButtons();
     renderMethods();
 
+    // ✅ attach comet to timer card once
+    if (!timerCometAttached) {
+      const timerCard = document.getElementById("timerCard");
+      if (timerCard) {
+        attachComet(timerCard, "#67E5FF", 22);
+        timerCometAttached = true;
+      }
+    }
+
     if (!city) {
       cityTitle.textContent = t("city_detecting");
       citySub.textContent = "—";
       setStatus(t("status_loading"));
 
-      // try geolocation once at first run
       useGeolocation().finally(() => {
         if (!city) {
           setStatus(t("status_err"));
