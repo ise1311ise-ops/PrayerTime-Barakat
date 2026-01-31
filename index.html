@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
@@ -30,13 +31,11 @@
 
     *{ box-sizing:border-box; }
     html,body{ height:100%; }
-
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:
-        radial-gradient(1200px 700px at 50% -10%, rgba(103,229,255,.10), transparent 55%),
-        linear-gradient(180deg, #05070a, #04060a 30%, #020407);
+      background: radial-gradient(1200px 700px at 50% -10%, rgba(103,229,255,.10), transparent 55%),
+                  linear-gradient(180deg, #05070a, #04060a 30%, #020407);
       color:var(--txt);
       overflow-x:hidden;
     }
@@ -160,13 +159,11 @@
     }
 
     .timer{
-      height: 92px; /* ✅ как у тебя */
+      height: 92px;
       display:flex;
       align-items:center;
       gap:12px;
       padding: 14px;
-      position:relative;
-      z-index:1;
     }
 
     .badge{
@@ -239,7 +236,7 @@
     }
 
     .prayer{
-      height: 66px; /* ✅ как у тебя */
+      height: 66px;
       display:flex;
       align-items:center;
       gap:12px;
@@ -254,7 +251,6 @@
       border-color: rgba(103,229,255,.50);
       box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset, 0 12px 30px rgba(0,0,0,.35);
     }
-
     .dot{
       width: 10px; height: 10px;
       border-radius: 999px;
@@ -393,29 +389,10 @@
       border-color: rgba(103,229,255,.35);
       background: rgba(103,229,255,.05);
     }
-
     .rowBtns{
       display:flex;
       gap:10px;
       margin-top: 12px;
-    }
-
-    /* ✅ у тебя не было .btn и .primary — добавил, чтобы кнопки работали и выглядели нормально */
-    .btn{
-      appearance:none;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.04);
-      color:#fff;
-      font-weight: 950;
-      padding: 12px 12px;
-      border-radius: 16px;
-      cursor:pointer;
-      flex: 1;
-    }
-    .btn.primary{
-      border-color: rgba(103,229,255,.55);
-      background: rgba(103,229,255,.10);
-      box-shadow: 0 0 0 2px rgba(103,229,255,.10) inset;
     }
 
     /* RTL tweaks for Arabic */
@@ -476,7 +453,6 @@
         </div>
         <button class="x" id="modalClose">✕</button>
       </div>
-
       <div class="modalBody">
         <input class="input" id="cityInput" placeholder="..." autocomplete="off" />
         <div class="hint" id="modalHint">—</div>
@@ -493,7 +469,9 @@
 
   <script>
 (() => {
+  // ---------------------------
   // Telegram init (safe)
+  // ---------------------------
   const tg = window.Telegram?.WebApp;
   try {
     tg?.ready?.();
@@ -502,7 +480,9 @@
     tg?.setBackgroundColor?.('#06080b');
   } catch(_) {}
 
+  // ---------------------------
   // i18n
+  // ---------------------------
   const i18n = {
     ru: {
       city_detecting: "Определяем город…",
@@ -575,14 +555,16 @@
   ];
 
   const METHODS = [
-    { id: 2,  code:"ISNA",         title:"ISNA" },
-    { id: 3,  code:"MWL",          title:"MWL" },
-    { id: 4,  code:"UMM_AL_QURA",  title:"Umm al-Qura" },
-    { id: 5,  code:"EGYPT",        title:"Egypt" },
-    { id: 15, code:"MOONSIGHTING", title:"Moonsighting" },
+    { id: 2,  code:"ISNA",        title:"ISNA" },
+    { id: 3,  code:"MWL",         title:"MWL" },
+    { id: 4,  code:"UMM_AL_QURA", title:"Umm al-Qura" },
+    { id: 5,  code:"EGYPT",       title:"Egypt" },
+    { id: 15, code:"MOONSIGHTING",title:"Moonsighting" },
   ];
 
+  // ---------------------------
   // storage helpers
+  // ---------------------------
   const S = {
     get lang(){ return localStorage.getItem("pt_lang") || "ru"; },
     set lang(v){ localStorage.setItem("pt_lang", v); },
@@ -598,7 +580,9 @@
     set savedCities(v){ localStorage.setItem("pt_saved", JSON.stringify(v)); },
   };
 
+  // ---------------------------
   // DOM
+  // ---------------------------
   const cityPill   = document.getElementById("cityPill");
   const cityTitle  = document.getElementById("cityTitle");
   const citySub    = document.getElementById("citySub");
@@ -628,14 +612,18 @@
   const langEn = document.getElementById("langEn");
   const langAr = document.getElementById("langAr");
 
+  // ---------------------------
   // state
+  // ---------------------------
   let lang = S.lang;
   let method = S.method;
   let city = S.city; // {name, display, lat, lon}
-  let timings = null;
+  let timings = null; // {Fajr:"HH:MM", ...}
   let timerTick = null;
 
-  // helpers
+  // ---------------------------
+  // UI helpers
+  // ---------------------------
   function t(key, ...args){
     const d = i18n[lang] || i18n.ru;
     const v = d[key];
@@ -653,8 +641,6 @@
     langAr.classList.toggle("active", lang==="ar");
   }
 
-  function setStatus(text){ statusText.textContent = text; }
-
   function fmt2(n){ return String(n).padStart(2,"0"); }
 
   function parseHHMM(hhmm){
@@ -662,20 +648,14 @@
     return {h, m};
   }
 
-  function escapeHtml(s){
-    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[c]));
-  }
+  function msUntilNextPrayer(now, list){
+    const future = list.find(x => x.at.getTime() > now.getTime());
+    if (future) return { next: future, ms: future.at.getTime() - now.getTime() };
 
-  function renderCityPill(){
-    if (!city) {
-      cityTitle.textContent = t("city_detecting");
-      citySub.textContent = "—";
-      return;
-    }
-    cityTitle.textContent = city.name || city.display || "—";
-    citySub.textContent = city.display || "";
+    const first = list[0];
+    const tomorrow = new Date(first.at.getTime());
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return { next: {...first, at: tomorrow}, ms: tomorrow.getTime() - now.getTime() };
   }
 
   function buildPrayerItems(){
@@ -690,16 +670,6 @@
     });
     base.sort((a,b) => a.at - b.at);
     return base;
-  }
-
-  function msUntilNextPrayer(now, list){
-    const future = list.find(x => x.at.getTime() > now.getTime());
-    if (future) return { next: future, ms: future.at.getTime() - now.getTime() };
-
-    const first = list[0];
-    const tomorrow = new Date(first.at.getTime());
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return { next: {...first, at: tomorrow}, ms: tomorrow.getTime() - now.getTime() };
   }
 
   function renderMethods(){
@@ -745,7 +715,6 @@
     if (!timings) {
       remainText.textContent = "--:--:--";
       nextText.textContent = "—";
-      untilLabel.textContent = "…";
       return;
     }
 
@@ -768,7 +737,29 @@
     if (idx >= 0 && cards[idx]) cards[idx].classList.add("next");
   }
 
+  function setStatus(text){
+    statusText.textContent = text;
+  }
+
+  function renderCityPill(){
+    if (!city) {
+      cityTitle.textContent = t("city_detecting");
+      citySub.textContent = "—";
+      return;
+    }
+    cityTitle.textContent = city.name || city.display || "—";
+    citySub.textContent = city.display || "";
+  }
+
+  function escapeHtml(s){
+    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  // ---------------------------
   // City search (Nominatim)
+  // ---------------------------
   let searchAbort = null;
   async function nominatimSearch(q){
     if (!q || q.trim().length < 2) return [];
@@ -793,14 +784,32 @@
 
       const country = x.address?.country || "";
       const short = [cityName, country].filter(Boolean).join(", ");
-      return { name: short || cityName || (display.split(",")[0] || "").trim(), display, lat, lon };
+      return { name: short || cityName || display.split(",")[0], display, lat, lon };
     });
+  }
+
+  function openModal(){
+    modalTitle.textContent = t("city_pick");
+    modalSub.textContent = t("city_pick_sub");
+    modalHint.textContent = t("city_pick_hint");
+    btnClearSaved.textContent = "🗑 " + t("clear_saved");
+    btnGeoInModal.textContent = "📡 " + t("use_geo");
+
+    cityInput.value = "";
+    resultsEl.innerHTML = "";
+    renderSavedCitiesIntoResults();
+    modalOverlay.classList.add("show");
+
+    setTimeout(() => cityInput.focus(), 50);
+    try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch(_) {}
+  }
+
+  function closeModal(){
+    modalOverlay.classList.remove("show");
   }
 
   function renderSavedCitiesIntoResults(){
     const saved = S.savedCities;
-    resultsEl.innerHTML = "";
-
     if (!saved.length) return;
 
     const sep = document.createElement("div");
@@ -837,26 +846,6 @@
     });
   }
 
-  function openModal(){
-    modalTitle.textContent = t("city_pick");
-    modalSub.textContent = t("city_pick_sub");
-    modalHint.textContent = t("city_pick_hint");
-    btnClearSaved.textContent = "🗑 " + t("clear_saved");
-    btnGeoInModal.textContent = "📡 " + t("use_geo");
-
-    cityInput.value = "";
-    resultsEl.innerHTML = "";
-    renderSavedCitiesIntoResults();
-
-    modalOverlay.classList.add("show");
-    setTimeout(() => cityInput.focus(), 50);
-    try { tg?.HapticFeedback?.impactOccurred?.("light"); } catch(_) {}
-  }
-
-  function closeModal(){
-    modalOverlay.classList.remove("show");
-  }
-
   async function pickCity(item, saveToSaved){
     city = item;
     S.city = city;
@@ -876,7 +865,9 @@
     try { tg?.HapticFeedback?.notificationOccurred?.("success"); } catch(_) {}
   }
 
+  // ---------------------------
   // Geolocation
+  // ---------------------------
   async function useGeolocation(){
     setStatus(t("status_loading"));
     try {
@@ -904,7 +895,6 @@
 
       const country = data.address?.country || "";
       const short = [cityName, country].filter(Boolean).join(", ");
-
       const picked = {
         name: short || cityName || "—",
         display: data.display_name || short || "",
@@ -921,7 +911,9 @@
     }
   }
 
-  // Aladhan timings
+  // ---------------------------
+  // Aladhan timings API
+  // ---------------------------
   function methodIdFromCode(code){
     return (METHODS.find(m => m.code === code)?.id) ?? 4;
   }
@@ -962,7 +954,9 @@
     }
   }
 
+  // ---------------------------
   // Language switching
+  // ---------------------------
   async function setLang(newLang){
     lang = newLang;
     S.lang = lang;
@@ -977,7 +971,9 @@
     if (modalOverlay.classList.contains("show")) openModal();
   }
 
+  // ---------------------------
   // Events
+  // ---------------------------
   cityPill.onclick = openModal;
   modalClose.onclick = closeModal;
   modalOverlay.onclick = (e) => { if (e.target === modalOverlay) closeModal(); };
@@ -1015,26 +1011,26 @@
     }, 250);
   });
 
+  // ---------------------------
   // Boot
+  // ---------------------------
   function boot(){
     setDirByLang();
     setLangButtons();
     renderMethods();
-    noteText.textContent = "";
+    noteText.textContent = ""; // no reminders / notifications
 
     if (!city) {
       cityTitle.textContent = t("city_detecting");
       citySub.textContent = "—";
       setStatus(t("status_loading"));
 
+      // try geolocation once at first run
       useGeolocation().finally(() => {
         if (!city) {
           setStatus(t("status_err"));
           cityTitle.textContent = t("city_detecting");
-          citySub.textContent =
-            (lang === "ar") ? "اضغط لاختيار المدينة" :
-            (lang === "en") ? "Tap to choose city" :
-            "Нажмите, чтобы выбрать город";
+          citySub.textContent = (lang === "ar") ? "اضغط لاختيار المدينة" : (lang === "en" ? "Tap to choose city" : "Нажмите, чтобы выбрать город");
         }
       });
     } else {
@@ -1044,7 +1040,8 @@
   }
 
   boot();
+
 })();
-  </script>
+</script>
 </body>
 </html>
