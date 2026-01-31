@@ -1,5 +1,4 @@
 <!doctype html>
-
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
@@ -401,10 +400,54 @@
     [dir="rtl"] .timer{ direction: rtl; }
     [dir="rtl"] .prayer{ direction: rtl; }
     [dir="rtl"] .names .n2{ opacity:.55; }
+
+    /* =========================================
+       Splash / Zastavka (zastavka.png)
+       ========================================= */
+    .splash{
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      background: #06080b;
+      padding: calc(18px + var(--safeTop)) 18px calc(18px + var(--safeBot)) 18px;
+      transition: opacity .28s ease, transform .28s ease;
+    }
+    .splash.hide{
+      opacity: 0;
+      transform: translateY(6px);
+      pointer-events: none;
+    }
+    .splashImg{
+      width: min(420px, 86vw);
+      max-height: min(520px, 60vh);
+      object-fit: contain;
+      border-radius: 18px;
+      box-shadow: 0 18px 70px rgba(0,0,0,.55);
+    }
+    .splashLoader{
+      margin-top: 18px;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 3px solid rgba(255,255,255,.16);
+      border-top-color: rgba(103,229,255,.85);
+      animation: spin .85s linear infinite;
+    }
+    @keyframes spin{
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 
 <body>
+  <!-- Splash / Zastavka -->
+  <div class="splash" id="splash" aria-hidden="false">
+    <img class="splashImg" src="zastavka.png" alt="PrayerTime Barakat" />
+    <div class="splashLoader" aria-label="Loading"></div>
+  </div>
+
   <div class="app">
     <div class="topbar">
       <div class="pill" id="cityPill" role="button" aria-label="Choose city">
@@ -583,6 +626,8 @@
   // ---------------------------
   // DOM
   // ---------------------------
+  const splash     = document.getElementById("splash");
+
   const cityPill   = document.getElementById("cityPill");
   const cityTitle  = document.getElementById("cityTitle");
   const citySub    = document.getElementById("citySub");
@@ -620,6 +665,20 @@
   let city = S.city; // {name, display, lat, lon}
   let timings = null; // {Fajr:"HH:MM", ...}
   let timerTick = null;
+
+  // ---------------------------
+  // Splash helpers
+  // ---------------------------
+  function showSplash(){
+    if (!splash) return;
+    splash.classList.remove("hide");
+    splash.setAttribute("aria-hidden", "false");
+  }
+  function hideSplash(){
+    if (!splash) return;
+    splash.classList.add("hide");
+    splash.setAttribute("aria-hidden", "true");
+  }
 
   // ---------------------------
   // UI helpers
@@ -869,6 +928,7 @@
   // Geolocation
   // ---------------------------
   async function useGeolocation(){
+    showSplash();
     setStatus(t("status_loading"));
     try {
       const pos = await new Promise((resolve, reject) => {
@@ -904,9 +964,11 @@
 
       await pickCity(picked, true);
       setStatus(t("status_ok"));
+      hideSplash();
     } catch (e) {
       console.error(e);
       setStatus(t("status_err"));
+      hideSplash();
       try { tg?.HapticFeedback?.notificationOccurred?.("error"); } catch(_) {}
     }
   }
@@ -938,6 +1000,7 @@
   async function refreshTimings(){
     if (!city) return;
 
+    showSplash();
     setStatus(t("status_loading"));
     try {
       timings = await fetchTimings(city.lat, city.lon);
@@ -948,9 +1011,11 @@
       timerTick = setInterval(renderTimer, 1000);
 
       setStatus(t("status_ok"));
+      hideSplash();
     } catch (e) {
       console.error(e);
       setStatus(t("status_err"));
+      hideSplash();
     }
   }
 
@@ -1015,6 +1080,7 @@
   // Boot
   // ---------------------------
   function boot(){
+    showSplash();
     setDirByLang();
     setLangButtons();
     renderMethods();
@@ -1029,6 +1095,7 @@
       useGeolocation().finally(() => {
         if (!city) {
           setStatus(t("status_err"));
+          hideSplash();
           cityTitle.textContent = t("city_detecting");
           citySub.textContent = (lang === "ar") ? "اضغط لاختيار المدينة" : (lang === "en" ? "Tap to choose city" : "Нажмите, чтобы выбрать город");
         }
@@ -1042,6 +1109,6 @@
   boot();
 
 })();
-</script>
+  </script>
 </body>
 </html>
